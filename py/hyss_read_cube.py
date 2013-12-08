@@ -10,10 +10,8 @@ from .hyss_read_header import *
 # -------- 
 
 # -- set the data path
-def read_cube(infile = "vnir bin rooftop_VNIR", getwaves=False):
-
-    # -- set the data path
-    dpath  = "/home/gdobler/data/middleton/vnir binned"
+def read_cube(infile="vnir bin rooftop_VNIR", dpath="../data/vnir binned",
+              getwaves=False):
 
     # -- set hdr and raw file names
     hdrfile = infile + ".hdr"

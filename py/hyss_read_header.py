@@ -6,11 +6,8 @@ import os
 #  2013/12/06 - Written by Greg Dobler (CUSP/NYU)
 # -------- 
 
-def read_header(hdrfile="vnir bin rooftop_VNIR.hdr"):
-
-    # -- set the data path
-    dpath = "/home/gdobler/data/middleton/vnir binned"
-
+def read_header(hdrfile="vnir bin rooftop_VNIR.hdr", 
+                dpath="../data/vnir binned"):
 
     # -- open the file and read in the records
     infile = open(os.path.join(dpath,hdrfile),'r')
