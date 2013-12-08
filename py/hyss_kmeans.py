@@ -1,7 +1,9 @@
-#from .mdl_read_header import *
-#from .mdl_read_cube import *
+#from .hyss_read_header import *
+#from .hyss_read_cube import *
 
-import middleton as mdl
+import hyss
+import pickle as pkl
+from sklearn.cluster import KMeans
 
 def l2_norm(data):
 
@@ -16,8 +18,9 @@ def l2_norm(data):
 # -- get the data cube and header
 #hdr  = read_header()
 #cube = read_cube()
-hdr  = mdl.read_header()
-cube = mdl.read_cube()
+print(
+hdr  = hyss.read_header()
+cube = hyss.read_cube()
 
 # -- pull out useful info from header
 nrow  = hdr['samples']
@@ -33,4 +36,10 @@ l2   = l2_norm(data)
 
 # -- run K-Means
 kmeans = KMeans(init='random', n_clusters=10, n_init=10)
-kmeans.fit(
+kmeans.fit((data.T/l2).T)
+
+
+# -- write K-Means to an output file
+fopen = open('../output/vnir_kmeans.pkl','wb')
+pkl.dump(kmeans,fopen)
+fopen.close()
