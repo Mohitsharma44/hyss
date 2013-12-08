@@ -1,7 +1,7 @@
 import os
 import time
 import numpy as np
-from mdl_read_header import *
+from hyss_read_header import *
 
 # -------- 
 #  Read in the data cube 
@@ -9,7 +9,7 @@ from mdl_read_header import *
 #  2013/12/06 - Written by Greg Dobler (KITP/UCSB)
 # -------- 
 
-#def mdl_read_cube(infile="vnir bin rooftop_VNIR"):
+#def hyss_read_cube(infile="vnir bin rooftop_VNIR"):
 
 # -- set the data path
 dpath  = "/home/gdobler/data/middleton/vnir binned"
