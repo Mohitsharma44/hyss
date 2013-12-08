@@ -18,11 +18,12 @@ def l2_norm(data):
 # -- get the data cube and header
 #hdr  = read_header()
 #cube = read_cube()
-print(
+print("HYSS_KMEANS: reading header and data cube...")
 hdr  = hyss.read_header()
 cube = hyss.read_cube()
 
 # -- pull out useful info from header
+print("HYSS_KMEANS: extracting info from header...")
 nrow  = hdr['samples']
 ncol  = hdr['lines']
 nband = hdr['bands']
@@ -30,12 +31,21 @@ waves = np.array(hdr['waves'])
 
 
 # -- reshape the data and grab the L2-norm
+print("HYSS_KMEANS: computing L2-norm and reshaping the data cube...")
 data = cube.reshape(nband,nrow*ncol).T
 l2   = l2_norm(data)
 
 
 # -- run K-Means
-kmeans = KMeans(init='random', n_clusters=10, n_init=10)
+k = 10
+
+print("HYSS_KMEANS: running k-means with {0} clusters...".format(k))
+
+try:
+    kmeans = KMeans(init='random', n_clusters=k, n_init=10)
+except:
+    kmeans = KMeans(init='random', k=k, n_init=10)
+
 kmeans.fit((data.T/l2).T)
 
 
