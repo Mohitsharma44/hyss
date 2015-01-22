@@ -62,6 +62,6 @@ def default_environ():
         print('CONFIG: found configuration file {0}.'.format(config_files[0]))
         print('CONFIG: initializing configuration, check hyss.HYSS_ENVIRON ' 
               'for details.')
-    load_config(config_files[0])
+        load_config(config_files[0])
 
     return HYSS_ENVIRON
