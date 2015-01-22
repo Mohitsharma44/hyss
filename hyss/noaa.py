@@ -48,14 +48,13 @@ class HyperNoaa():
         self.data  = {}
 
         # -- read in the NOAA xls files and convert to ndarrays
-        print("NOAA: reading NOAA templates...")
+        print("NOAA: reading NOAA templates from {0}".format(fpath))
 
         try:
             noaa = [pd.read_excel(os.path.join(self.fpath,i)) for i in 
                     self.flist]
         except:
             print("NOAA: file read failed!!!")
-            print("NOAA: run hio.get_noaa() to retreive NOAA templates.")
             return
 
         for tfile,tdata in zip(self.flist,noaa):
