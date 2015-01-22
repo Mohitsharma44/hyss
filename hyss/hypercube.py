@@ -7,38 +7,26 @@ import matplotlib.pyplot as plt
 from numpy import ma
 from matplotlib import cm
 from sklearn.cluster import KMeans
+from .hio import HYSS_ENVIRON
 
 
 class HyperCube():
 
 
-    def __init__(self, fname, dpath='', fac=1, flat=True, case='VNIR_night'):
-
-        # -- handle ambiguous input
-        if '.' in fname:
-            fname = fname.split('.')[0]
-
-
-        # -- clean up path and file names
-        nrow  = 1600/fac
-        dpath = dpath + 'nrow{0:04}'.format(1600/fac)
-        fstr  = '_'+str(nrow).zfill(4) + ('_flat' if flat else '')
-        fname = fname + fstr + '.raw'
-
+    def __init__(self, fname=HYSS_ENVIRON['HYSS_DNAME'], 
+                 fpath=HYSS_ENVIRON['HYSS_DPATH'], fac=1):
 
         # -- set the input file
-        infile = os.path.join(dpath,fname)
+        infile = os.path.join(fpath,fname)
         ftree  = os.path.split(infile) # directory tree pointing to the file
 
-        self.fpath  = os.path.join(ftree[:-1])
-        self.fname  = ftree[-1]
-        self.case   = case
+        self.fpath  = fpath
+        self.fname  = fname
         self.hdr    = read_header(case)
         self.nrow   = self.hdr.samples/fac
         self.ncol   = self.hdr.lines/fac
         self.nwav   = len(self.hdr.wavelength)
         self.fac    = fac
-        self.flat   = flat
         self.ind    = np.zeros([self.nrow,self.ncol],dtype=bool)
         self.thresh = 16.0/fac
         self.nthr   = 3
@@ -47,11 +35,16 @@ class HyperCube():
         # -- read in the data
         print("HIO: reading {0}".format(self.fpath))
         print("HIO:   {0}".format(self.fname))
-        self.data        = np.zeros([self.nwav,self.nrow,self.ncol])
-        fopen            = open(infile,'rb')
-        self.data[:,:,:] = np.fromfile(fopen).reshape(self.nwav,self.nrow,
-                                                      self.ncol)
-        fopen.close()
+        self.data = np.zeros([self.nwav,self.nrow,self.ncol])
+
+        try:
+            fopen            = open(infile,'rb')
+            self.data[:,:,:] = np.fromfile(fopen).reshape(self.nwav,self.nrow,
+                                                          self.ncol)
+            fopen.close()
+        except:
+            print("HIO: Error reading raw data file, is binning factor set?")
+            return
 
 
         # -- set the wavelengths
