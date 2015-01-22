@@ -5,6 +5,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from . import HYSS_ENVIRON
 
 
 class HyperNoaa():
@@ -30,10 +31,10 @@ class HyperNoaa():
         example of that lighting type.
     """
 
-    def __init__(self):
+    def __init__(self, fpath=HYSS_ENVIRON['NOAA_DPATH']):
 
         # -- set the data path and file list, and initialize the container
-        self.fpath = os.path.join(os.environ['HYSS_DATA'],'noaa')
+        self.fpath = fpath
         self.flist = ['Fluorescent_Lamps_20100311.xls',
                       'High_Pressure_Sodium_Lamps_20100311.xls',
                       'Incandescent_Lamps_20100311.xls',
@@ -47,14 +48,14 @@ class HyperNoaa():
         self.data  = {}
 
         # -- read in the NOAA xls files and convert to ndarrays
-        print("HIO: reading NOAA templates...")
+        print("NOAA: reading NOAA templates...")
 
         try:
             noaa = [pd.read_excel(os.path.join(self.fpath,i)) for i in 
                     self.flist]
         except:
-            print("HIO: file read failed!!!")
-            print("HIO: run hio.get_noaa() to retreive NOAA templates.")
+            print("NOAA: file read failed!!!")
+            print("NOAA: run hio.get_noaa() to retreive NOAA templates.")
             return
 
         for tfile,tdata in zip(self.flist,noaa):
@@ -302,11 +303,12 @@ class HyperNoaa():
         return
 
 
-def get_noaa(path='noaa'):
+
+def get_noaa(dpath=HYSS_ENVIRON['NOAA_DPATH']):
     """
     Script to grab the NOAA templates from the web.
 
-    By default the (.xls) files are put into the path $HYSS_DATA/noaa/.
+    By default the (.xls) files are put into the HYSS_ENVIRON path NOAA_DPATH.
 
     Parameters
     ----------
@@ -331,16 +333,12 @@ def get_noaa(path='noaa'):
              "groups_summary_stats.High Pressure Sodium.xls",
              "groups_summary_stats.Metal Halide.xls"]
 
-
     # -- set the web address and target directory
     wadd  = "http://ngdc.noaa.gov/eog/data/web_data/nightsat"
-    tpath = os.path.join(os.environ['HYSS_DATA'],'noaa')
-
 
     # -- define the commands
     cmd = ["wget \"{0}/{1}\"".format(wadd,i) for i in flist] + \
-        ["mv *.xls {0}".format(tpath)]
-
+        ["mv *.xls {0}".format(dpath)]
 
     # -- execute commands
     [os.system(i) for i in cmd]
