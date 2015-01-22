@@ -7,14 +7,18 @@ import matplotlib.pyplot as plt
 from numpy import ma
 from matplotlib import cm
 from sklearn.cluster import KMeans
-from .hio import HYSS_ENVIRON
+from .hyperheader import HyperHeader
+from . import HYSS_ENVIRON
 
 
 class HyperCube():
 
-
     def __init__(self, fname=HYSS_ENVIRON['HYSS_DNAME'], 
-                 fpath=HYSS_ENVIRON['HYSS_DPATH'], fac=1):
+                 fpath=HYSS_ENVIRON['HYSS_DPATH'], 
+                 hname=HYSS_ENVIRON['HYSS_HNAME'],
+                 hpath=HYSS_ENVIRON['HYSS_HPATH'], fac=1):
+
+        print(fname,fpath,hname,hpath)
 
         # -- set the input file
         infile = os.path.join(fpath,fname)
@@ -22,7 +26,7 @@ class HyperCube():
 
         self.fpath  = fpath
         self.fname  = fname
-        self.hdr    = read_header(case)
+        self.hdr    = HyperHeader(hname,hpath)
         self.nrow   = self.hdr.samples/fac
         self.ncol   = self.hdr.lines/fac
         self.nwav   = len(self.hdr.wavelength)
@@ -33,8 +37,8 @@ class HyperCube():
 
 
         # -- read in the data
-        print("HIO: reading {0}".format(self.fpath))
-        print("HIO:   {0}".format(self.fname))
+        print("HYPERCUBE: reading {0}".format(self.fpath))
+        print("HYPERCUBE:   {0}".format(self.fname))
         self.data = np.zeros([self.nwav,self.nrow,self.ncol])
 
         try:
@@ -43,7 +47,8 @@ class HyperCube():
                                                           self.ncol)
             fopen.close()
         except:
-            print("HIO: Error reading raw data file, is binning factor set?")
+            print("HYPERCUBE: Error reading raw data file, is binning factor " 
+                  "set?")
             return
 
 
@@ -165,8 +170,8 @@ class HyperCube():
         npix = self.ind.sum()
 
         if npix==0:
-            print("HIO: data cube has not been thresholded...")
-            print("HIO: thresholding with current values...")
+            print("HYPERCUBE: active pixels have not been set.")
+            print("HYPERCUBE: thresholding with current values...")
             self.threshold()
             npix = self.ind.sum()
 
@@ -178,7 +183,7 @@ class HyperCube():
 
 
         # -- run K-Means
-        print("HIO: running K-Means with {0} ".format(n_clusters) + 
+        print("HYPERCUBE: running K-Means with {0} ".format(n_clusters) + 
               "clusters and {0} points...".format(npix))
 
         self.km = KMeans(n_clusters=n_clusters)
