@@ -15,6 +15,7 @@ from .hio import *
 from .hyperheader import *
 from .hypercube import *
 from .noaa import *
+from .plotting import *
 from .reduce import *
 
 
