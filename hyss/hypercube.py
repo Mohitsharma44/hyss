@@ -8,6 +8,7 @@ from numpy import ma
 from matplotlib import cm
 from sklearn.cluster import KMeans
 from .hyperheader import HyperHeader
+from .plotting import plot_cube
 from . import HYSS_ENVIRON
 
 
@@ -17,8 +18,6 @@ class HyperCube():
                  fpath=HYSS_ENVIRON['HYSS_DPATH'], 
                  hname=HYSS_ENVIRON['HYSS_HNAME'],
                  hpath=HYSS_ENVIRON['HYSS_HPATH'], fac=1):
-
-        print(fname,fpath,hname,hpath)
 
         # -- set the input file
         infile = os.path.join(fpath,fname)
@@ -190,6 +189,19 @@ class HyperCube():
         self.km.fit(lgt.T)
 
         return
+
+
+
+    def plot(self,**kwargs):
+        """
+        A wrapper around the plotting.plot_cube function.
+
+        This function accepts the same keyword arguments as plotting.plot_cube.
+        """
+
+        plot_cube(self,**kwargs)
+        return
+
 
 
     def plot_active(self,clim=[0,5],aspect=0.5):
