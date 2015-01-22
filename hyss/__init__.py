@@ -14,6 +14,7 @@ HYSS_ENVIRON = default_environ()
 from .hio import *
 from .hyperheader import *
 from .hypercube import *
+from .noaa import *
 from .reduce import *
 
 
