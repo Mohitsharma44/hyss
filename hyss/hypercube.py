@@ -4,6 +4,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle as pkl
 from numpy import ma
 from matplotlib import cm
 from sklearn.cluster import KMeans
@@ -196,6 +197,31 @@ class HyperCube():
         return
 
 
+    def write_kmeans(self, opath=None):
+        """
+        Write the K-Means solution (and important attributes) to a file.
+        """
+        # -- defaults
+        opath = opath if opath else HYSS_ENVIRON['HYSS_WRITE']
+
+        # -- define the file
+        kmname = self.fname.split('.')[0] + '_km.pkl'
+
+        # -- write to file
+        fopen = open(os.path.join(opath,kmname),'wb')
+
+        pkl.dump(self.km,fopen)
+        pkl.dump(self.fac,fopen)
+        pkl.dump(self.nrow,fopen)
+        pkl.dump(self.ncol,fopen)
+        pkl.dump(self.thresh,fopen)
+        pkl.dump(self.nthr,fopen)
+        pkl.dump(self.ind,fopen)
+
+        fopen.close()
+
+        return
+
 
     def plot(self,**kwargs):
         """
@@ -230,7 +256,7 @@ class HyperCube():
         return
 
 
-    def plot_kmeans(self):
+    def plot_kmeans_all(self):
 
         # -- set the number of axes for plotting
         nax = len(self.km.cluster_centers_)
@@ -265,5 +291,97 @@ class HyperCube():
 
         fig.canvas.draw()
         plt.show()
+
+        return
+
+
+
+    def plot_kmeans(self, clim=[0,2], cmap='bone', showall=False, xsize=10.):
+
+        if showall:
+            self.plot_kmeans_all()
+
+        # -- convert True labels to positions
+        def labs2pnts(labs):
+            inds = np.arange(labs.size)[labs.flatten()]
+            xind = inds % labs.shape[1]
+            yind = inds // labs.shape[0]
+
+            return xind,yind
+
+        # -- select cluster
+        def cluster_select(event):
+            if event.inaxes==ax[2]:
+                cind       = int(event.xdata)
+                xind, yind = labs2pnts(labels==(cind+1))
+
+                lin[0].set_data(self.wavelength*1e-3, 
+                                self.km.cluster_centers_[cind])
+                ax[1].set_ylim([self.km.cluster_centers_[cind].min(),
+                                self.km.cluster_centers_[cind].max()])
+
+                pnts[0].set_data(xind,yind)
+                bgrec.set_xy([cind,0])
+                fig.canvas.draw()
+
+        # -- initialize the labels plot
+        labels = np.zeros(self.ind.shape,dtype=int)
+        labels[self.ind] = self.km.labels_ + 1
+
+        # -- utilities
+        nrow, ncol = self.nrow, self.ncol
+        rat1 = float(nrow)/float(ncol)
+        rat2 = 0.55/0.9
+
+        # -- set the number of axes for plotting
+        nax = len(self.km.cluster_centers_)
+        nsx = int(np.ceil(np.sqrt(nax)))
+        nsy = int(np.ceil(float(nax)/nsx))
+
+        # -- initialize the plots
+        fig = plt.figure(figsize=[xsize,xsize*0.75],facecolor='ivory')
+
+        # -- plot the points for the 1st cluster
+        ax = []
+        ax.append(fig.add_axes([0.05,0.4,0.9,0.9*rat2]))
+        ax[0].axis('off')
+
+        xind, yind = labs2pnts(labels==1)
+
+        pnts = ax[0].plot(xind,yind,'.',markersize=8,color='#348ABD')
+        im   = ax[0].imshow(self.img_L,clim=clim,cmap=cmap,
+                            aspect=rat2*0.75/rat1)
+
+        # -- add a plot of the K-Means spectrum
+        ax.append(fig.add_axes([0.05,0.07,0.9,0.25]))
+        ax[1].set_axis_bgcolor('lightgray')
+        ax[1].set_xlim([self.wavelength[0]*1e-3,self.wavelength[-11]*1e-3])
+        ax[1].set_ylim([self.km.cluster_centers_[0].min(),
+                        self.km.cluster_centers_[0].max()])
+        lin = ax[1].plot(self.wavelength*1e-3, self.km.cluster_centers_[0],
+                         color='#E24A33',lw=2)
+        ax[1].set_xlabel('wavelength [micron]',fontsize=10)
+        ax[1].set_yticklabels('')
+        ax[1].grid(1,ls='-',color='white',lw=1.5)
+        ax[1].set_axisbelow(True)
+
+        # -- add plot for the cluster labels
+        ax.append(fig.add_axes([0.05,0.32,0.9,0.08]))
+        ax[2].set_yticklabels('')
+        ax[2].set_axis_bgcolor('ivory')
+        ax[2].set_yticks([0,1])
+        ax[2].set_xticks(range(15))
+        ax[2].set_xticklabels('')
+        ax[2].grid(1,ls='-',axis='x')
+        ax[2].set_xlim([0,15])
+        
+        [ax[2].text(i+0.5,0.5,str(i+1), ha='center',va='center',fontsize=20) 
+         for i in range(self.km.n_clusters)]
+
+        bgrec = ax[2].add_patch(plt.Rectangle([0,0],1,1,facecolor='#FFB380'))
+
+        fig.canvas.mpl_connect('motion_notify_event',cluster_select)
+
+        fig.canvas.draw()
 
         return
