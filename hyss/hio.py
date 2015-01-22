@@ -11,12 +11,17 @@ import os
 import numpy as np
 from .hyperheader import *
 from .hypercube import *
+from .config import HYSS_ENVIRON
 
 # -------- 
 #  read header files
 # -------- 
-def read_header(hname=HYSS_ENVIRON['HYSS_HNAME'],
-                hpath=HYSS_ENVIRON['HYSS_HPATH']):
+def read_header(hname=None,hpath=None):
+
+    # -- defaults
+    hname = hname if hname else HYSS_ENVIRON['HYSS_HNAME']
+    hpath = hpath if hpath else HYSS_ENVIRON['HYSS_HPATH']
+
 
     # -- read header
     print("HIO: reading header...")
@@ -27,11 +32,14 @@ def read_header(hname=HYSS_ENVIRON['HYSS_HNAME'],
 # -------- 
 #  read data cubes
 # -------- 
-def read_cube(dname=HYSS_ENVIRON['HYSS_DNAME'],
-              dpath=HYSS_ENVIRON['HYSS_DPATH'],
-              hname=HYSS_ENVIRON['HYSS_HNAME'],
-              hpath=HYSS_ENVIRON['HYSS_HPATH'],
-              fac=int(HYSS_ENVIRON['HYSS_fac'])):
+def read_cube(dname=None, dpath=None, hname=None, hpath=None, fac=None):
+
+    # -- defaults
+    dname = dname if dname else HYSS_ENVIRON['HYSS_DNAME']
+    dpath = dpath if dpath else HYSS_ENVIRON['HYSS_DPATH']
+    hname = hname if hname else HYSS_ENVIRON['HYSS_HNAME']
+    hpath = hpath if hpath else HYSS_ENVIRON['HYSS_HPATH']
+    fac   = fac if fac else int(HYSS_ENVIRON['HYSS_FAC'])
 
     # -- read data cube
     print("HIO: reading data cube...")

@@ -9,15 +9,20 @@ from matplotlib import cm
 from sklearn.cluster import KMeans
 from .hyperheader import HyperHeader
 from .plotting import plot_cube
-from . import HYSS_ENVIRON
+from .config import HYSS_ENVIRON
 
 
 class HyperCube():
 
-    def __init__(self, fname=HYSS_ENVIRON['HYSS_DNAME'], 
-                 fpath=HYSS_ENVIRON['HYSS_DPATH'], 
-                 hname=HYSS_ENVIRON['HYSS_HNAME'],
-                 hpath=HYSS_ENVIRON['HYSS_HPATH'], fac=1):
+    def __init__(self, fname=None, fpath=None, hname=None, hpath=None, 
+                 fac=None):
+
+        # -- get the defaults
+        fname  = fname if fname else HYSS_ENVIRON['HYSS_DNAME'] 
+        fpath  = fpath if fpath else HYSS_ENVIRON['HYSS_DPATH'] 
+        hname  = hname if hname else HYSS_ENVIRON['HYSS_HNAME']
+        hpath  = hpath if hpath else HYSS_ENVIRON['HYSS_HPATH']
+        fac    = fac if fac else HYSS_ENVIRON['HYSS_FAC']
 
         # -- set the input file
         infile = os.path.join(fpath,fname)

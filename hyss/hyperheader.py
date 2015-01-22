@@ -9,7 +9,7 @@
 
 import os
 import numpy as np
-from . import HYSS_ENVIRON
+from .config import HYSS_ENVIRON
 
 
 class HyperHeader():
@@ -71,10 +71,12 @@ class HyperHeader():
         The FWHMa of the observing bands.
     """
 
-    def __init__(self, fname=HYSS_ENVIRON['HYSS_HNAME'],
-                 fpath=HYSS_ENVIRON['HYSS_HPATH'],):
+    def __init__(self, fname=None, fpath=None):
 
         # -- set the input file
+        fname = fname if fname else HYSS_ENVIRON['HYSS_HNAME']
+        fpath = fpath if fpath else HYSS_ENVIRON['HYSS_HPATH']
+
         self.fpath = fpath
         self.fname = fname
 

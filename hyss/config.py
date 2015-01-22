@@ -10,7 +10,7 @@ HYSS_ENVIRON = {'HYSS_DPATH' : '.',
                 'HYSS_HNAME' : '.',
                 'HYSS_WRITE' : '.',
                 'NOAA_DPATH' : '.',
-                'HYSS_fac'   : '1'
+                'HYSS_FAC'   : '1'
                 }
 
 
@@ -29,7 +29,7 @@ def load_config(infile):
     HYSS_HNAME : name_of_header_file
     HYSS_WRITE : /path/to/write/output
     NOAA_DPATH : /path/to/noaa/data
-    HYSS_fac   : 4
+    HYSS_FAC   : 4
 
     Paramters
     ---------
@@ -43,7 +43,7 @@ def load_config(infile):
             continue
         elif ':' in line:
             recs = line.split(':')
-            HYSS_ENVIRON[recs[0].replace(" ","")] = \
+            HYSS_ENVIRON[recs[0].replace(" ","").upper()] = \
                 recs[1].replace("\n","").lstrip().rstrip()
 
     return
