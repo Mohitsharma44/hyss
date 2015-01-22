@@ -5,7 +5,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from . import HYSS_ENVIRON
+from .config import HYSS_ENVIRON
 
 
 class HyperNoaa():
@@ -31,7 +31,10 @@ class HyperNoaa():
         example of that lighting type.
     """
 
-    def __init__(self, fpath=HYSS_ENVIRON['NOAA_DPATH']):
+    def __init__(self, fpath=None):
+
+        # -- defaults
+        fpath = fpath if fpath else HYSS_ENVIRON['NOAA_DPATH']
 
         # -- set the data path and file list, and initialize the container
         self.fpath = fpath
