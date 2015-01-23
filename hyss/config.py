@@ -4,12 +4,12 @@
 import os
 
 # -- hold default paths and load a config file if it exists
-HYSS_ENVIRON = {'HYSS_DPATH' : '.',
-                'HYSS_DNAME' : '.',
-                'HYSS_HPATH' : '.',
-                'HYSS_HNAME' : '.',
-                'HYSS_WRITE' : '.',
-                'NOAA_DPATH' : '.',
+HYSS_ENVIRON = {'HYSS_DPATH' : '',
+                'HYSS_DNAME' : '',
+                'HYSS_HPATH' : '',
+                'HYSS_HNAME' : '',
+                'HYSS_WRITE' : '',
+                'NOAA_DPATH' : '',
                 'HYSS_FAC'   : '1'
                 }
 
