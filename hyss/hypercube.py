@@ -264,6 +264,11 @@ class HyperCube():
 
     def plot_kmeans_all(self):
 
+        # -- utilities
+        waves = self.wavelength*1e-3 if not self.indexing else \
+            np.arange(self.nwav)
+        xlab  = 'wavelength [micron]' if not self.indexing else 'index'
+
         # -- set the number of axes for plotting
         nax = len(self.km.cluster_centers_)
         nsx = int(np.ceil(np.sqrt(nax)))
@@ -278,7 +283,7 @@ class HyperCube():
         for ii,ex in enumerate(self.km.cluster_centers_):
             iax, jax = ii//nsx, ii%nsx
             ax = fig.add_subplot(nsy,nsx,iax*nsx+jax+1)
-            ax.plot(self.wavelength/1000.,ex)
+            ax.plot(waves,ex)
                     
             if iax!=nsy-1:
                 ax.set_xticklabels('')
@@ -290,8 +295,7 @@ class HyperCube():
         # -- add the units
         fig.text(0.5,0.98,'K-Means (k={0})'.format(self.km.n_clusters),
                  fontsize=18,ha='center',va='top')
-        fig.text(0.5,0.02,'wavelength [micron]',fontsize=12,ha='center',
-                 va='bottom')
+        fig.text(0.5,0.02,xlab,fontsize=12,ha='center',va='bottom')
         fig.text(0.02,0.5,'intensity [arb units]',fontsize=12,ha='left',
                  va='center',rotation=90)
 
@@ -307,6 +311,11 @@ class HyperCube():
         if showall:
             self.plot_kmeans_all()
 
+        # -- utilities
+        waves = self.wavelength*1e-3 if not self.indexing else \
+            np.arange(self.nwav)
+        xlab  = 'wavelength [micron]' if not self.indexing else 'index'
+
         # -- convert True labels to positions
         def labs2pnts(labs):
             inds = np.arange(labs.size)[labs.flatten()]
@@ -321,8 +330,7 @@ class HyperCube():
                 cind       = int(event.xdata)
                 xind, yind = labs2pnts(labels==(cind+1))
 
-                lin[0].set_data(self.wavelength*1e-3, 
-                                self.km.cluster_centers_[cind])
+                lin[0].set_data(waves,self.km.cluster_centers_[cind])
                 ax[1].set_ylim([self.km.cluster_centers_[cind].min(),
                                 self.km.cluster_centers_[cind].max()])
 
@@ -361,12 +369,12 @@ class HyperCube():
         # -- add a plot of the K-Means spectrum
         ax.append(fig.add_axes([0.05,0.07,0.9,0.25]))
         ax[1].set_axis_bgcolor('lightgray')
-        ax[1].set_xlim([self.wavelength[0]*1e-3,self.wavelength[-11]*1e-3])
+        ax[1].set_xlim([waves[0],waves[-1]])
         ax[1].set_ylim([self.km.cluster_centers_[0].min(),
                         self.km.cluster_centers_[0].max()])
-        lin = ax[1].plot(self.wavelength*1e-3, self.km.cluster_centers_[0],
-                         color='#E24A33',lw=2)
-        ax[1].set_xlabel('wavelength [micron]',fontsize=10)
+        lin = ax[1].plot(waves, self.km.cluster_centers_[0],color='#E24A33',
+                         lw=2)
+        ax[1].set_xlabel(xlab,fontsize=10)
         ax[1].set_yticklabels('')
         ax[1].grid(1,ls='-',color='white',lw=1.5)
         ax[1].set_axisbelow(True)
