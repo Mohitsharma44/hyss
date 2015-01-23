@@ -16,7 +16,7 @@ from .config import HYSS_ENVIRON
 class HyperCube():
 
     def __init__(self, fname=None, fpath=None, hname=None, hpath=None, 
-                 fac=None):
+                 fac=None, dim=None):
 
         # -- get the defaults
         fname  = fname if fname else HYSS_ENVIRON['HYSS_DNAME'] 
@@ -31,10 +31,22 @@ class HyperCube():
 
         self.fpath  = fpath
         self.fname  = fname
-        self.hdr    = HyperHeader(hname,hpath)
-        self.nrow   = self.hdr.samples/fac
-        self.ncol   = self.hdr.lines/fac
-        self.nwav   = len(self.hdr.wavelength)
+
+        # -- read the header information
+        if hname:
+            self.hdr    = HyperHeader(hname,hpath)
+            self.nwav   = len(self.hdr.wavelength)
+            self.nrow   = self.hdr.samples/fac
+            self.ncol   = self.hdr.lines/fac
+        elif dim==None:
+            print("HYPERCUBE: No associated header file, must set "
+                  "dim=[nwav,nrow,ncol]!!!")
+            return
+        else:
+            self.nwav = dim[0]
+            self.nrow = dim[1]
+            self.ncol = dim[2]
+
         self.fac    = fac
         self.ind    = np.zeros([self.nrow,self.ncol],dtype=bool)
         self.thresh = 16.0/fac
@@ -58,22 +70,16 @@ class HyperCube():
 
 
         # -- set the wavelengths
-        self.wavelength = self.hdr.wavelength
+        if hname:
+            self.wavelength = self.hdr.wavelength
+            self.indexing   = False
+        else:
+            self.wavelength = np.zeros(self.nwav)
+            self.indexing   = True
 
 
         # -- construct the total luminosity image
         self.img_L = self.data.mean(0)
-
-
-        # -- generate an 8-bit rgb image
-        img  = np.dstack([self.data[self.wavelength>=620.].mean(0),
-                          self.data[(self.wavelength>=495) & 
-                                    (self.wavelength<620)].mean(0),
-                          self.data[self.wavelength<495].mean(0)])
-        img -= img.min()
-        img /= img.max()
-
-        self.img = (255*img).astype(np.uint8)
 
         return
 
