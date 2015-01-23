@@ -32,7 +32,8 @@ def read_header(hname=None,hpath=None):
 # -------- 
 #  read data cubes
 # -------- 
-def read_cube(dname=None, dpath=None, hname=None, hpath=None, fac=None):
+def read_cube(dname=None, dpath=None, hname=None, hpath=None, fac=None, 
+              dim=None):
 
     # -- defaults
     dname = dname if dname else HYSS_ENVIRON['HYSS_DNAME']
@@ -43,4 +44,4 @@ def read_cube(dname=None, dpath=None, hname=None, hpath=None, fac=None):
 
     # -- read data cube
     print("HIO: reading data cube...")
-    return HyperCube(dname,dpath,hname,hpath,fac)
+    return HyperCube(dname,dpath,hname,hpath,fac,dim)
