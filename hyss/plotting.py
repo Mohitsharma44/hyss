@@ -47,9 +47,9 @@ def plot_cube(cube,cmap='bone',clim=None,median_filter=False,figsize=10):
             mn = cube.data[:,rind,cind].mean()
             sd = cube.data[:,rind,cind].std()
             if not median_filter:
-                lin[0].set_data(cube.wavelength*1e-3,cube.data[:,rind,cind])
+                lin[0].set_data(waves,cube.data[:,rind,cind])
             else:
-                lin[0].set_data(cube.wavelength*1e-3,mf(cube.data[:,rind,cind],
+                lin[0].set_data(waves,mf(cube.data[:,rind,cind],
                                                         median_filter))
             ax[1].set_ylim([min(-10,cube.data[:,rind,cind].min()),
                             max(20,1.2*cube.data[:,rind,cind].max())])
@@ -60,11 +60,13 @@ def plot_cube(cube,cmap='bone',clim=None,median_filter=False,figsize=10):
         return
 
     # -- utilities
-    arat = float(cube.nrow)/float(cube.ncol)
-    rat = arat*3./5.
-    med = np.median(cube.img_L)
-    sig = cube.img_L.std()
-    scl = 0.2
+    waves = cube.wavelength*1e-3 if not cube.indexing else np.arange(cube.nwav)
+    xlab  = 'wavelength [micron]' if not cube.indexing else 'index'
+    arat  = float(cube.nrow)/float(cube.ncol)
+    rat   = arat*3./5.
+    med   = np.median(cube.img_L)
+    sig   = cube.img_L.std()
+    scl   = 0.2
 
     if clim==None:
         clim = [scl*max(med - 2*sig,cube.img_L.min()),
@@ -81,8 +83,8 @@ def plot_cube(cube,cmap='bone',clim=None,median_filter=False,figsize=10):
     ax[1].set_ylim([-10,20])
     ax[1].grid(1,color='white',ls='-',lw=1.5)
     ax[1].set_axis_bgcolor('lightgray')
-    ax[1].set_xlabel('wavelength [micron]')
-    ax[1].set_xlim([0.4,cube.wavelength[-1]*1e-3])
+    ax[1].set_xlabel(xlab)
+    ax[1].set_xlim([waves.min(),waves.max()])
     ax[1].set_ylabel('intensity\n[arb units]')
     ax[1].set_axisbelow(True)
 
@@ -91,11 +93,9 @@ def plot_cube(cube,cmap='bone',clim=None,median_filter=False,figsize=10):
 
     # -- plot the spectrum
     if not median_filter:
-        lin = ax[1].plot(cube.wavelength*1e-3,cube.data[:,0,0],color='#E24A33',
-                         lw=1.5)
+        lin = ax[1].plot(waves,cube.data[:,0,0],color='#E24A33',lw=1.5)
     else:
-        lin = ax[1].plot(cube.wavelength*1e-3,mf(cube.data[:,0,0], 
-                                                 median_filter),
+        lin = ax[1].plot(waves,mf(cube.data[:,0,0],median_filter),
                          color='#E24A33',lw=1.5)
 
     # -- show the position of the spectrum
