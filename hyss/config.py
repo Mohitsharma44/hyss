@@ -4,13 +4,14 @@
 import os
 
 # -- hold default paths and load a config file if it exists
-HYSS_ENVIRON = {'HYSS_DPATH' : '',
-                'HYSS_DNAME' : '',
-                'HYSS_HPATH' : '',
-                'HYSS_HNAME' : '',
-                'HYSS_WRITE' : '',
-                'NOAA_DPATH' : '',
-                'HYSS_FAC'   : '1'
+HYSS_ENVIRON = {'HYSS_CONFIG' : '',
+                'HYSS_DPATH'  : '',
+                'HYSS_DNAME'  : '',
+                'HYSS_HPATH'  : '',
+                'HYSS_HNAME'  : '',
+                'HYSS_WRITE'  : '',
+                'NOAA_DPATH'  : '',
+                'HYSS_FAC'    : '1'
                 }
 
 
@@ -38,6 +39,8 @@ def load_config(infile):
     """
 
     # -- Update the config dictionary
+    HYSS_ENVIRON['HYSS_CONFIG'] = infile
+
     for line in open(infile,'r'):
         if line[0]=='#':
             continue
