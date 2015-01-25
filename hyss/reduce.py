@@ -15,6 +15,7 @@ import os
 import sys
 import numpy as np
 from .hio import HyperHeader
+from .config import HYSS_ENVIRON
 
 def reduce(base="full frame 20ms faster_VNIR",
            mpath="night time vnir full frame"):
@@ -30,7 +31,7 @@ def reduce(base="full frame 20ms faster_VNIR",
     """
 
     # -- set paths and file names
-    dpath = os.path.join(os.environ['HYSS_DATA'],"middleton",mpath)
+    dpath = os.path.join(HYSS_ENVIRON['HYSS_DPATH'],"middleton",mpath)
     rname = os.path.join(dpath,'.'.join([base,'raw']))
     hname = os.path.join(dpath,'.'.join([base,'hdr']))
 
@@ -89,7 +90,7 @@ def reduce(base="full frame 20ms faster_VNIR",
 
 
     # -- create output directories and write
-    opaths = [os.path.join(os.environ['HYSS_WRITE'],'raw_binned',
+    opaths = [os.path.join(HYSS_ENVIRON['HYSS_WRITE'],'raw_binned',
                            'nrow{0:04}'.format(i)) for i in 
               [1600,1600,800,800,400,400]]
     for opath, data, ext in zip(*[opaths,
@@ -107,5 +108,38 @@ def reduce(base="full frame 20ms faster_VNIR",
         print("REDUCE:   {0}".format(os.path.split(tout)[-1]))
 
         data.tofile(open(tout,'wb'))
+
+    return
+
+
+
+def subsample():
+    """
+    Reads in the unbinned data cube, slices it, and writes the sub-sampled 
+    result to a file.
+    """
+
+    nwav = 872
+    nrow = 1600
+    ncol = 1560
+
+    fpath  = os.path.join(HYSS_ENVIRON['HYSS_WRITE'],'raw_binned/nrow1600')
+    fnames = ['full_frame_20ms_faster_VNIR_1600.raw',
+              'full_frame_20ms_faster_VNIR_1600_flat.raw']
+
+    for fname in fnames:
+        print("SUBSAMPLE: reading data from {0}".format(fpath))
+        print("SUBSAMPLE:   {0}".format(fname))
+        data = np.fromfile(os.path.join(fpath,fname)).reshape(nwav,nrow,ncol)
+
+        for fac in [2,4,8]:
+            trow  = '{0:04}'.format(1600/fac)
+            opath = os.path.join(HYSS_ENVIRON['HYSS_WRITE'],'raw_subsample',
+                                 'nrow'+trow)
+            oname = fname.replace('1600',trow)
+
+            print("SUBSAMPLE: writing subsampled data to {0}".format(opath))
+            print("SUBSAMPLE:   {0}".format(oname))
+            data[:,::fac,::fac].tofile(open(os.path.join(opath,oname),'wb'))
 
     return
