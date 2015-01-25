@@ -232,6 +232,39 @@ class HyperCube(object):
         return
 
 
+    def read_kmeans(self, fname, fpath=None):
+        """
+        Read the pickled output from write_kmeans.
+
+        Parameters
+        ----------
+        fname : str
+            The file name of the K-Means output.
+
+        fpath : str, optional
+            The path to the K-Means output (defaults to 
+            HYSS_ENVIRON['HYSS_WRITE']).
+        """
+
+        # -- read the file
+        fpath  = fpath if fpath else HYSS_ENVIRON['HYSS_WRITE']
+        kmfile = os.path.join(fpath,fname)
+        fopen  = open(kmfile,'rb')
+
+        self.km     = pkl.load(fopen)
+        self.config = pkl.load(fopen)
+        self.fac    = pkl.load(fopen)
+        self.nrow   = pkl.load(fopen)
+        self.ncol   = pkl.load(fopen)
+        self.thresh = pkl.load(fopen)
+        self.nthr   = pkl.load(fopen)
+        self.ind    = pkl.load(fopen)
+
+        fopen.close()
+
+        return
+
+
     def plot(self,**kwargs):
         """
         A wrapper around the plotting.plot_cube function.
