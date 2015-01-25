@@ -12,7 +12,7 @@ import numpy as np
 from .config import HYSS_ENVIRON
 
 
-class HyperHeader():
+class HyperHeader(object):
     """
     Reads contents of a header file from a hyperspectral observation into a 
     container.
@@ -22,7 +22,7 @@ class HyperHeader():
     fname : str
         The header file name (e.g., /path_to_file/hyperfile.hdr)
 
-    hpath : str, optional
+    fpath : str, optional
         The path to the header (default is empty)
 
 
