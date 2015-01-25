@@ -13,12 +13,14 @@ from .plotting import plot_cube
 from .config import HYSS_ENVIRON
 
 
-class HyperCube():
+class HyperCube(object):
 
     def __init__(self, fname=None, fpath=None, hname=None, hpath=None, 
                  fac=None, dim=None):
 
         # -- get the defaults
+        self.config = HYSS_ENVIRON
+
         fname  = fname if fname else HYSS_ENVIRON['HYSS_DNAME'] 
         fpath  = fpath if fpath else HYSS_ENVIRON['HYSS_DPATH'] 
         hname  = hname if hname else HYSS_ENVIRON['HYSS_HNAME']
@@ -49,8 +51,8 @@ class HyperCube():
 
         self.fac    = fac
         self.ind    = np.zeros([self.nrow,self.ncol],dtype=bool)
-        self.thresh = 16.0/fac
-        self.nthr   = 3
+        self.thresh = 10.
+        self.nthr   = 35
 
 
         # -- read in the data
@@ -217,6 +219,7 @@ class HyperCube():
         fopen = open(os.path.join(opath,kmname),'wb')
 
         pkl.dump(self.km,fopen)
+        pkl.dump(self.config,fopen)
         pkl.dump(self.fac,fopen)
         pkl.dump(self.nrow,fopen)
         pkl.dump(self.ncol,fopen)
