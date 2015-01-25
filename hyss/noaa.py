@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from .config import HYSS_ENVIRON
 
 
-class HyperNoaa():
+class HyperNoaa(object):
     """
     Container for NOAA template spectra measured in the lab.
 
