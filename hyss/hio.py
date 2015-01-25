@@ -9,8 +9,9 @@
 
 import os
 import numpy as np
-from .hyperheader import *
-from .hypercube import *
+from .hyperheader import HyperHeader
+from .hypercube import HyperCube
+from .noaa import HyperNoaa
 from .config import HYSS_ENVIRON
 
 # -------- 
@@ -45,3 +46,27 @@ def read_cube(dname=None, dpath=None, hname=None, hpath=None, fac=None,
     # -- read data cube
     print("HIO: reading data cube...")
     return HyperCube(dname,dpath,hname,hpath,fac,dim)
+
+
+
+# -------- 
+#  read NOAA templates
+# -------- 
+def read_noaa(dpath=None):
+    """
+    Read the NOAA templates.
+
+    This is a wrapper around the HyperNoaa class.
+
+    Parameters
+    ----------
+    dpath : str, optional
+        The path to the NOAA data.  Defaults to HYSS_ENVIRON['NOAA_DPATH'].
+    """
+
+    # -- defaults
+    dpath = dpath if dpath else HYSS_ENVIRON['NOAA_DPATH']
+
+    # -- read in the NOAA data
+    print("HIO: reading the NOAA templates...")
+    return HyperNoaa(dpath)
