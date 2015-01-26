@@ -51,8 +51,8 @@ class HyperCube(object):
 
         self.fac    = fac
         self.ind    = np.zeros([self.nrow,self.ncol],dtype=bool)
-        self.thresh = 10.
-        self.nthr   = 35
+        self.thresh = 0.5
+        self.nthr   = 1
 
 
         # -- read in the data
@@ -86,7 +86,7 @@ class HyperCube(object):
         return
 
 
-    def threshold(self,thresh=None,nthr=None):
+    def threshold(self,thresh=None,nthr=None,luminosity=True):
         """
         Set active indices as pixels for which at least nthr points are 
         greater than the threshold.
@@ -100,7 +100,8 @@ class HyperCube(object):
 
 
         # -- threshold the array
-        self.ind = (self.data>self.thresh).sum(0)>self.nthr
+        self.ind = self.img_L>self.thresh if luminosity else \
+            (self.data>self.thresh).sum(0)>self.nthr
 
         return
 
