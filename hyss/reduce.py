@@ -69,8 +69,12 @@ def reduce(base="full frame 20ms faster_VNIR",
 
     # -- flatten across columns
     print("REDUCE: flattening across columns...")
-    row_av = raw_flat.mean(1)
-    raw_flat[:] = (raw_flat.transpose(1,0,2)-row_av).transpose(1,0,2)
+    row_av_top = raw_flat[:,:800,:].mean(1)
+    row_av_bot = raw_flat[:,800:,:].mean(1)
+    raw_flat[:,:800,:] = (raw_flat[:,:800,:].transpose(1,0,2) - 
+                          row_av_top).transpose(1,0,2)
+    raw_flat[:,800:,:] = (raw_flat[:,800:,:].transpose(1,0,2) - 
+                          row_av_bot).transpose(1,0,2)
 
 
     # -- rebin
