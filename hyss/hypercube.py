@@ -125,7 +125,7 @@ class HyperCube(object):
 
         # -- estimate the noise and zero point for each spectrum
         print("BINARIZE: estimating noise level and zero-point...")
-        sig = (self.data[1:]-self.data[:-1]).std(0)/np.sqrt(2.0)
+        sig = (self.data[1:]-self.data[:-1])[-100:].std(0)/np.sqrt(2.0)
         zer = self.data[:10].mean(0)
 
         # -- converting to binary
