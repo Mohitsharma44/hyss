@@ -178,6 +178,42 @@ class HyperCube(object):
         return
 
 
+    def correlate(self,templates,select=False):
+        """
+        Correlate the input templates against the active pixels.
+
+        The input templates must be at the same wavelengths as the data.
+
+        Parameters
+        ----------
+        templates : an NtemplatesxNwavelength numpy array
+            The templates with which to correlate.
+
+        select : bool, optional
+            If True, return the index of the highest correlation coefficient, 
+            if False, return all of the correlation coefficients.           
+
+        Returns
+        -------
+        corr : NtemplatesxNpix numpy array
+            The Ntempaltes correlation coefficients for each active pixel.
+        """
+
+        # -- make copies of the data
+        temps = templates.T.copy()
+        specs = self.data[:,self.ind].copy()
+
+        # -- normalize
+        temps -= temps.mean(0)
+        temps /= temps.std(0)
+        specs -= specs.mean(0)
+        specs /= specs.std(0)
+
+        # -- calculate the correlation coefficient
+        corr = np.dot(temps.T,specs)
+        
+        return corr if not select else np.argmax(corr[0])
+
 
     def kmeans(self,n_clusters=15):
 
