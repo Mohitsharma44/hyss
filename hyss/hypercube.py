@@ -487,9 +487,9 @@ def estimate_noise(spec, ind_range=None):
 
     # -- set the index range (nb, ends at len(spec)-1 since the derivative has
     #    one fewer points than the spectrum).
-    ind_range = ind_range if ind_range else [0,len(spec)-1]
+    ind_range = ind_range if ind_range else [0,spec.shape[0]-1]
 
     # -- compute the derivative and estimate the noise over the range
-    noise = (spec[1:]-spec[:-1])[ind_range[0]:ind_range[1]].std()/np.sqrt(2.0)
+    noise = (spec[1:]-spec[:-1])[ind_range[0]:ind_range[1]].std(0)/np.sqrt(2.0)
 
     return noise
