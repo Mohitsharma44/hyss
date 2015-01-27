@@ -8,6 +8,7 @@ import pickle as pkl
 from numpy import ma
 from matplotlib import cm
 from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 from .hyperheader import HyperHeader
 from .plotting import plot_cube
 from .config import HYSS_ENVIRON
@@ -262,6 +263,29 @@ class HyperCube(object):
         self.ind    = pkl.load(fopen)
 
         fopen.close()
+
+        return
+
+
+    def pca(self, **kwargs):
+        """
+        Run principle component decomposition on the active spectra.
+
+        This wrapper accepts the same keywords as the scikit-learn 
+        implementation of PCA.
+        """
+
+        # -- prepare the data vector
+        print("HYPERCUBE: normalizing spectra...")
+        norm  = self.data[:,self.ind]
+        norm -= norm.min(0)
+        norm /= norm.sum(0)
+        norm -= norm.mean(0)
+
+        # -- run PCA
+        print("HYPERCUBE: running PCA...")
+        self.pca = PCA(**kwargs)
+        self.pca.fit(norm.T)
 
         return
 
