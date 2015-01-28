@@ -175,7 +175,20 @@ class HyperCube(object):
         The input templates must be at the same wavelengths as the data.
         """
 
-        return
+        data  = self.data[:,cube.ind].copy()
+        data -= data.mean(0)
+        data /= data.std(0)
+
+        P  = templates.T.copy()
+        P -= P.mean(0)
+        P /= P.std(0)
+
+        PtP    = np.dot(P.T,P)
+        Ptdata = np.dot(P.T,data)
+        PtPinv = np.linalg.inv(PtP)
+        avec   = np.dot(PtPinv,Ptdata)
+
+        return avec
 
 
     def correlate(self,templates,select=False):
