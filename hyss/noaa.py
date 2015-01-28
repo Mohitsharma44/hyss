@@ -137,6 +137,23 @@ class HyperNoaa(object):
         return
 
 
+    def remove_correlated(self):
+        """
+        For spectra which are highly correlated, this function chooses the 
+        first example.
+        """
+
+        # -- set the good indices and select
+        gind = np.array([0,3,7,10,11,12,16,19,20,24,28,29,30,38,39,41,42])
+
+        self.rows      = self.rows[gind]
+        self.row_names = self.row_names[gind]
+        self.irows     = self.irows[gind]
+
+        return
+
+
+
     def binarize(self, sigma=5, interpolated=False):
         """
         Convert spectra to boolean values at each wavelengtqh.
