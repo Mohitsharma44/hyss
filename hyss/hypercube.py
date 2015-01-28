@@ -239,7 +239,7 @@ class HyperCube(object):
         return corr if not select else np.argmax(corr[0])
 
 
-    def kmeans(self,n_clusters=15):
+    def kmeans(self,n_clusters=15,**kwargs):
 
         # -- give an alert
         npix = self.ind.sum()
@@ -261,7 +261,7 @@ class HyperCube(object):
         print("HYPERCUBE: running K-Means with {0} ".format(n_clusters) + 
               "clusters and {0} points...".format(npix))
 
-        self.km = KMeans(n_clusters=n_clusters)
+        self.km = KMeans(n_clusters=n_clusters,**kwargs)
         self.km.fit(lgt.T)
 
         return
@@ -288,6 +288,7 @@ class HyperCube(object):
         pkl.dump(self.thresh,fopen)
         pkl.dump(self.nthr,fopen)
         pkl.dump(self.ind,fopen)
+        pkl.dump(self.img_L,fopen)
 
         fopen.close()
 
@@ -321,6 +322,7 @@ class HyperCube(object):
         self.thresh = pkl.load(fopen)
         self.nthr   = pkl.load(fopen)
         self.ind    = pkl.load(fopen)
+        self.img_L  = pkl.load(fopen)
 
         fopen.close()
 
