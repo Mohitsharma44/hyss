@@ -107,6 +107,17 @@ class HyperCube(object):
         return
 
 
+    def remove_disconnected(self):
+        """
+        Remove active pixels that are disconnected from any neighbors.
+        """
+
+        # -- check active pixels above, below, left, and right
+        self.ind = self.ind & (np.roll(self.ind,1,0) | np.roll(self.ind,-1,0) |
+                               np.roll(self.ind,1,1) | np.roll(self.ind,-1,1))
+
+        return
+
     def binarize(self, sigma=5):
         """
         Convert spectra to boolean values at each wavelength.
