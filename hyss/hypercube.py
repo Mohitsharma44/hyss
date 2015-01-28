@@ -243,18 +243,18 @@ class HyperCube(object):
         return
 
 
-    def write_kmeans(self, opath=None):
+    def write_kmeans(self, kmname=None, kmpath=None):
         """
         Write the K-Means solution (and important attributes) to a file.
         """
         # -- defaults
-        opath = opath if opath else HYSS_ENVIRON['HYSS_WRITE']
+        kmpath = kmpath if kmpath else HYSS_ENVIRON['HYSS_WRITE']
 
         # -- define the file
-        kmname = self.fname.split('.')[0] + '_km.pkl'
+        kmname = kmname if kmname else self.fname.split('.')[0] + '_km.pkl'
 
         # -- write to file
-        fopen = open(os.path.join(opath,kmname),'wb')
+        fopen = open(os.path.join(kmpath,kmname),'wb')
 
         pkl.dump(self.km,fopen)
         pkl.dump(self.config,fopen)
