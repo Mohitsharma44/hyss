@@ -5,6 +5,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.ndimage.filters import gaussian_filter as gf
 from .config import HYSS_ENVIRON
 
 
@@ -148,13 +149,17 @@ class HyperNoaa(object):
 
         self.rows      = self.rows[gind]
         self.row_names = self.row_names[gind]
-        self.irows     = self.irows[gind]
+
+        try:
+            self.irows = self.irows[gind]
+        except:
+            pass
 
         return
 
 
 
-    def binarize(self, sigma=5, interpolated=False):
+    def binarize(self, sigma=None, interpolated=False, smooth=False):
         """
         Convert spectra to boolean values at each wavelengtqh.
 
@@ -175,15 +180,23 @@ class HyperNoaa(object):
             If True, binarize the interpolated spectra.
         """
 
-        # -- estimate the noise and zero point for each spectrum
-        print("BINARIZE: estimating noise level and zero-point...")
         dat = self.rows.T if not interpolated else self.irows.T
-        sig = (dat[1:]-dat[:-1]).std(0)/np.sqrt(2.0)
-        zer = dat[:10].mean(0)
 
-        # -- converting to binary
-        print("BINARIZE: converting spectra to boolean...")
-        self.brows = ((dat-zer)>(sigma*sig)).T.copy()
+        if smooth:
+            dat[:] = gf(dat,[smooth,0])
+
+        if sigma:
+            # -- estimate the noise and zero point for each spectrum
+            print("BINARIZE: estimating noise level and zero-point...")
+            sig = (dat[1:]-dat[:-1]).std(0)/np.sqrt(2.0)
+            zer = dat[:10].mean(0)
+
+            # -- converting to binary
+            print("BINARIZE: converting spectra to boolean...")
+            self.brows = ((dat-zer)>(sigma*sig)).T.copy()
+        else:
+            # -- binarize by comparison with mean
+            self.brows = (dat > dat.mean(0)).T
 
         return
 
