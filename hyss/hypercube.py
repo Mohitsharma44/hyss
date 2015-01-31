@@ -5,6 +5,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
+from scipy.ndimage import gaussian_filter as gf
 from numpy import ma
 from matplotlib import cm
 from sklearn.cluster import KMeans
@@ -118,7 +119,7 @@ class HyperCube(object):
 
         return
 
-    def binarize(self, sigma=5):
+    def binarize(self, sigma=None, smooth=None):
         """
         Convert spectra to boolean values at each wavelength.
 
@@ -136,14 +137,27 @@ class HyperCube(object):
             to have flux.
         """
 
-        # -- estimate the noise and zero point for each spectrum
-        print("BINARIZE: estimating noise level and zero-point...")
-        sig = (self.data[1:]-self.data[:-1])[-100:].std(0)/np.sqrt(2.0)
-        zer = self.data[:10].mean(0)
+        # -- smooth if desired
+        dat = self.data if not smooth else gf(self.data,[smooth,0,0])
 
-        # -- converting to binary
-        print("BINARIZE: converting spectra to boolean...")
-        self.bdata = (self.data-zer)>(sigma*sig)
+        if sigma:
+            # -- estimate the noise and zero point for each spectrum
+            print("BINARIZE: estimating noise level and zero-point...")
+            sig = (dat[1:]-dat[:-1])[-100:].std(0)/np.sqrt(2.0)
+            zer = dat[:10].mean(0)
+
+            # -- converting to binary
+            print("BINARIZE: converting spectra to boolean...")
+            self.bdata = (dat-zer)>(sigma*sig)
+        else:
+            # -- careful about diffraction spikes which look like absoportion
+            mn_tot = dat.mean(0)
+            mn_end = dat[-100:].mean(0)
+            index  = mn_tot > mn_end
+            mn     = mn_tot*index + mn_end*~index
+
+            # -- binarize by comparison with mean
+            self.bdata = dat>mn
 
         return
 
