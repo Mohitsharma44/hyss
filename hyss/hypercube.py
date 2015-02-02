@@ -9,7 +9,7 @@ from scipy.ndimage import gaussian_filter as gf
 from numpy import ma
 from matplotlib import cm
 from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, FastICA
 from .hyperheader import HyperHeader
 from .plotting import plot_cube
 from .config import HYSS_ENVIRON
@@ -343,7 +343,7 @@ class HyperCube(object):
         return
 
 
-    def pca(self, **kwargs):
+    def run_pca(self, **kwargs):
         """
         Run principle component decomposition on the active spectra.
 
@@ -366,6 +366,29 @@ class HyperCube(object):
         return
 
 
+    def run_ica(self, **kwargs):
+        """
+        Run independent component analysis on the active spectra.
+
+        This wrapper accepts the same keywords as the scikit-learn 
+        implementation FastICA.
+        """
+
+        # -- prepare the data vector
+        print("HYPERCUBE: normalizing spectra...")
+        norm  = self.data[:,self.ind]
+        norm -= norm.min(0)
+        norm /= norm.sum(0)
+        norm -= norm.mean(0)
+
+        # -- run PCA
+        print("HYPERCUBE: running FastICA...")
+        self.ica = FastICA(**kwargs)
+        self.ica.fit(norm.T)
+
+        return
+
+
     def plot(self,**kwargs):
         """
         A wrapper around the plotting.plot_cube function.
@@ -375,7 +398,6 @@ class HyperCube(object):
 
         plot_cube(self,**kwargs)
         return
-
 
 
     def plot_active(self,clim=[0,5],aspect=0.5):
@@ -440,7 +462,6 @@ class HyperCube(object):
         plt.show()
 
         return
-
 
 
     def plot_kmeans(self, clim=[0,2], cmap='bone', showall=False, xsize=10.):
