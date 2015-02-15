@@ -248,8 +248,8 @@ class HyperCube(object):
         specs /= specs.std(0)
 
         # -- calculate the correlation coefficient
-        corr = np.dot(temps.T,specs)
-        
+        corr = np.dot(temps.T,specs)/float(temps.shape[0])
+
         return corr if not select else np.argmax(corr[0])
 
 
