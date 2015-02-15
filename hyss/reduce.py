@@ -14,6 +14,7 @@ steps are performed:
 import os
 import sys
 import numpy as np
+import statsmodels.api as sm
 from .hio import HyperHeader
 from .config import HYSS_ENVIRON
 
@@ -149,3 +150,39 @@ def subsample():
             data[:,::fac,::fac].tofile(open(os.path.join(opath,oname),'wb'))
 
     return
+
+
+
+def get_dark():
+    """
+    Read in the dark file, generate a smoothed spectrum of the instrument 
+    response, and write to a file.
+    """
+
+    # -- utilities
+    nwav = 872
+    nrow = 1600
+    ncol = 20
+    dpath = "../../data/middleton/night time vnir full frame"
+    dname = "full frame 20ms dark_VNIR.raw"
+    fname = os.path.join(dpath,dname)
+
+    # -- read the file
+    raw   = 1.0*np.fromfile(open(fname,'rb'),np.uint16 \
+                            ).reshape(ncol,nwav,nrow \
+                                      )[:,:,::-1].transpose(1,2,0)
+
+    # -- take the mean spectrum of the upper and lower half and smooth
+    upper = raw[:,:800,:].mean(-1).mean(-1)
+    lower = raw[:,800:,:].mean(-1).mean(-1)
+
+    smoff = [sm.nonparametric.lowess(upper,
+                                     np.arange(len(upper)),frac=0.2)[:,1], 
+             sm.nonparametric.lowess(lower,
+                                     np.arange(len(lower)),frac=0.2)[:,1]]
+
+    return smoff, raw
+
+
+
+
