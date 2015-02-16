@@ -14,107 +14,165 @@ steps are performed:
 import os
 import sys
 import numpy as np
+from multiprocessing import Pipe, Process
 import statsmodels.api as sm
 from .hio import HyperHeader
 from .config import HYSS_ENVIRON
 
-def reduce(base="full frame 20ms faster_VNIR",
-           mpath="night time vnir full frame"):
+
+def reduce(cube, base, nproc=1, niter=10):
     """ 
     Run the data reduction pipeline 
 
     Parameters
     ----------
-    base : str, optional
-        Base of the file name (base.raw and base.hdr are read).
-    mpath: str, optional
-        The path of the measurement.
+    cube : HyperCube
+        The data cube to which to apply the reduction.
+
+    base : str
+        The output file name base (e.g., base.bin will be written)
+
+    niter : int, optional
+        The number of iterations to use during sigma clipping
+
+    nproc : int, optional
+        The number of processors to use.
     """
 
-    # -- set paths and file names
-    dpath = os.path.join(HYSS_ENVIRON['HYSS_DPATH'],"middleton",mpath)
-    rname = os.path.join(dpath,'.'.join([base,'raw']))
-    hname = os.path.join(dpath,'.'.join([base,'hdr']))
-
-
-    # -- read header
-    print("REDUCE: reading header...")
-    hdr  = HyperHeader(hname)
-    nrow = hdr.samples
-    ncol = hdr.lines
-    nwav = hdr.bands
+    # -- utilities
+    nwav = cube.nwav
+    nrow = cube.nrow
+    ncol = cube.ncol
+    dl   = int(np.ceil(cube.nwav/float(nproc)))
+    lr   = [[i*dl,(i+1)*dl] for i in range(nproc)]
+    regs = [[0,425],[425,800],[800,1170],[1170,1600]]
 
 
     # -- allocate arrays
     print("REDUCE: allocating arrays...")
-    raw           = np.zeros([nwav,nrow,ncol])
-    raw_flat      = np.zeros([nwav,nrow,ncol])
-    raw_bin2      = np.zeros([nwav,nrow/2,ncol/2])
-    raw_flat_bin2 = np.zeros([nwav,nrow/2,ncol/2])
-    raw_bin4      = np.zeros([nwav,nrow/4,ncol/4])
-    raw_flat_bin4 = np.zeros([nwav,nrow/4,ncol/4])
+    clean_rows = np.zeros([nwav,nrow,ncol])
+    clean_cols = np.zeros([nwav,nrow,ncol])
 
 
-    # -- read data
-    print("REDUCE: reading raw data cube...")
-    raw[:] = 1.0*np.fromfile(open(rname,'rb'),np.uint16
-                             ).reshape(ncol,nwav,nrow
-                                       )[:,:,::-1].transpose(1,2,0)
+    # -- run rows
+    def run_rows(conn, cube, lrng, niter):
+        llo, lhi = lrng
+        norm = np.ma.array(cube.data[llo:lhi].transpose(2,0,1))
+
+        for ii in range(niter):
+            if llo==0:
+                print("REDUCE: row iteration {0} of {1}\r".format(ii+1,niter)),
+                sys.stdout.flush()
+
+            med       = np.ma.median(norm,0)
+            sig       = norm.std(0)
+            norm.mask = (norm > (med+3*sig))
+        print("")
+
+        med       = np.ma.median(norm,0)
+        norm.mask = False
+
+        conn.send((norm - med).transpose(1,2,0)[:,:,:])
+        conn.close()
+
+        return 
+
+
+    # -- run columns
+    def run_cols(conn, clean_rows, lrng, rrng, niter):
+        llo, lhi = lrng
+        rlo, rhi = rrng
+        norm = np.ma.array(clean_rows[llo:lhi,rlo:rhi].transpose(1,0,2))
+        niter = 10
+
+        if llo==0:
+            print("REDUCE: running rows {0}-{1}".format(rlo,rhi))
+
+        for ii in range(niter):
+            if llo==0:
+                print("REDUCE: col iteration {0} of {1}\r".format(ii+1,niter)),
+                sys.stdout.flush()
+
+            med       = np.ma.median(norm,0)
+            sig       = norm.std(0)
+            norm.mask = (norm > (med+3*sig))
+        print("")
+
+        med       = np.ma.median(norm,0)
+        norm.mask = False
+
+        conn.send((norm - med).transpose(1,0,2)[:,:,:])
+        conn.close()
+
+        return 
 
 
     # -- flatten across rows
-    print("REDUCE: flattening across rows...")
-    col_av = raw.mean(2)
-    raw_flat[:] = (raw.transpose(2,0,1)-col_av).transpose(1,2,0)
+    print("REDUCE: flattening across rows using " 
+          "{0} processors...".format(nproc))
+
+    parents, childs, ps = [], [] ,[]
+    for ip in range(nproc):
+        ptemp, ctemp = Pipe()
+        parents.append(ptemp)
+        childs.append(ctemp)
+        ps.append(Process(target=run_rows,args=(childs[ip],cube,lr[ip],niter)))
+        ps[ip].start()
+
+    for ip in range(nproc):
+        clean_rows[lr[ip][0]:lr[ip][1]] = parents[ip].recv()
+        ps[ip].join()
+        print("REDUCE: process {0} rejoined\r".format(ip)),
+        sys.stdout.flush()
+    print("")
 
 
     # -- flatten across columns
-    print("REDUCE: flattening across columns...")
-    rcut = [0,425,800,1170,1600]
-    for ii in range(1,5):
-        rlo = rcut[ii-1]
-        rhi = rcut[ii]
+    print("REDUCE: flattening across columns using " 
+          "{0} processors...".format(nproc))
 
-        row_av = raw_flat[:,rlo:rhi,:].mean(1)
-        raw_flat[:,rlo:rhi,:] = (raw_flat[:,rlo:rhi,:].transpose(1,0,2) - 
-                                 row_av).transpose(1,0,2)
+    for reg in regs:
+        parents, childs, ps = [], [] ,[]
+        for ip in range(nproc):
+            ptemp, ctemp = Pipe()
+            parents.append(ptemp)
+            childs.append(ctemp)
+            ps.append(Process(target=run_cols,args=(childs[ip],clean_rows,
+                                                    lr[ip],reg,niter)))
+            ps[ip].start()
 
-
-    # -- rebin
-    print("REDUCE: rebinning by a factor of 2x2...")
-    fac             = 2
-    raw_bin2[:]     = raw.reshape(nwav,nrow/fac,fac,ncol/fac,fac
-                                  ).mean(2).mean(-1)
-    raw_flat_bin2[:] = raw_flat.reshape(nwav,nrow/fac,fac,ncol/fac,fac
-                                     ).mean(2).mean(-1)
-
-    print("REDUCE: rebinning by a factor of 4x4...")
-    fac             = 4
-    raw_bin4[:]     = raw.reshape(nwav,nrow/fac,fac,ncol/fac,fac
-                                  ).mean(2).mean(-1)
-    raw_flat_bin4[:] = raw_flat.reshape(nwav,nrow/fac,fac,ncol/fac,fac
-                                     ).mean(2).mean(-1)
+        for ip in range(nproc):
+            clean_cols[lr[ip][0]:lr[ip][1],reg[0]:reg[1]] = parents[ip].recv()
+            ps[ip].join()
+            print("REDUCE: process {0}\r rejoined".format(ip)),
+            sys.stdout.flush()
+        print("")
 
 
     # -- create output directories and write
-    opaths = [os.path.join(HYSS_ENVIRON['HYSS_WRITE'],'raw_binned',
-                           'nrow{0:04}'.format(i)) for i in 
-              [1600,1600,800,800,400,400]]
-    for opath, data, ext in zip(*[opaths,
-                                  [raw,raw_flat,raw_bin2,raw_flat_bin2,
-                                   raw_bin4,raw_flat_bin4],
-                                  ['','_flat']*3]):
-        tout = os.path.join(opath,base.replace(" ","_") + '_' + opath[-4:] + 
-                            ext + '.raw')
+    for fac in [1,2,4]:
+        fstr = '{0:04}'.format(nrow/fac)
 
+        opath = os.path.join(HYSS_ENVIRON['HYSS_WRITE'],'raw_subsample',
+                             'nrow{0:04}'.format(nrow/fac))
+        
         if not os.path.isdir(opath):
             print("REDUCE: creating {0}".format(opath))
             os.makedirs(opath)
 
         print("REDUCE: writing to {0}".format(opath))
-        print("REDUCE:   {0}".format(os.path.split(tout)[-1]))
 
-        data.tofile(open(tout,'wb'))
+        fname = base+fstr+'.bin'
+        print("REDUCE:   {0}".format(fname))
+        cube.data[:,::fac,::fac].tofile(os.path.join(opath,fname))
+
+        fname = base+fstr+'_flat_row.bin'
+        print("REDUCE:   {0}".format(fname))
+        clean_rows[:,::fac,::fac].tofile(os.path.join(opath,fname))
+
+        fname = base+fstr+'_flat.bin'
+        print("REDUCE:   {0}".format(fname))
+        clean_cols[:,::fac,::fac].tofile(os.path.join(opath,fname))
 
     return
 
