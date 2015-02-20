@@ -478,7 +478,7 @@ class HyperCube(object):
         def labs2pnts(labs):
             inds = np.arange(labs.size)[labs.flatten()]
             xind = inds % labs.shape[1]
-            yind = inds // labs.shape[0]
+            yind = inds // labs.shape[1]
 
             return xind,yind
 
