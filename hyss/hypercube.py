@@ -200,7 +200,7 @@ class HyperCube(object):
         The input templates must be at the same wavelengths as the data.
         """
 
-        data  = self.data[:,cube.ind].copy()
+        data  = self.data[:,self.ind].copy()
         data -= data.mean(0)
         data /= data.std(0)
 
@@ -210,7 +210,7 @@ class HyperCube(object):
 
         PtP    = np.dot(P.T,P)
         Ptdata = np.dot(P.T,data)
-        PtPinv = np.linalg.inv(PtP)
+        PtPinv = np.linalg.pinv(PtP)
         avec   = np.dot(PtPinv,Ptdata)
 
         return avec
