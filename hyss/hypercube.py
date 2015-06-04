@@ -401,6 +401,7 @@ class HyperCube(object):
 
 
     def plot_active(self,clim=[0,5],aspect=0.5):
+        """ Plot the active pixels """
 
         # -- set the color map and active pixel color
         tcm = cm.bone
