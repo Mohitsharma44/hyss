@@ -15,19 +15,17 @@ import os
 import sys
 import numpy as np
 from multiprocessing import Pipe, Process
-import statsmodels.api as sm
-from .hio import HyperHeader
-from .config import HYSS_ENVIRON
 
 
-def reduce(cube, base, nproc=1, niter=10):
+def reduce(data, base, nproc=1, niter=10, outdir="../output/reduced_subample"):
     """ 
     Run the data reduction pipeline 
 
     Parameters
     ----------
-    cube : HyperCube
-        The data cube to which to apply the reduction.
+    data : ndarray
+        The data cube to which to apply the reduction.  It must have shape 
+        [nwav,nrow,ncol].
 
     base : str
         The output file name base (e.g., base.bin will be written)
@@ -40,12 +38,17 @@ def reduce(cube, base, nproc=1, niter=10):
     """
 
     # -- utilities
-    nwav = cube.nwav
-    nrow = cube.nrow
-    ncol = cube.ncol
-    dl   = int(np.ceil(cube.nwav/float(nproc)))
+    nwav, nrow, ncol = data.shape
+
+    dl   = int(np.ceil(nwav/float(nproc)))
     lr   = [[i*dl,(i+1)*dl] for i in range(nproc)]
     regs = [[0,425],[425,800],[800,1170],[1170,1600]]
+
+
+    # -- alert
+    if nproc<8:
+        print("REDUCE: reducing data using {0} ".format(nproc) + 
+              "processors; this may be too few...")
 
 
     # -- allocate arrays
@@ -55,9 +58,9 @@ def reduce(cube, base, nproc=1, niter=10):
 
 
     # -- run rows
-    def run_rows(conn, cube, lrng, niter):
+    def run_rows(conn, data, lrng, niter):
         llo, lhi = lrng
-        norm = np.ma.array(cube.data[llo:lhi].transpose(2,0,1))
+        norm = np.ma.array(data[llo:lhi].transpose(2,0,1))
 
         for ii in range(niter):
             if llo==0:
@@ -67,7 +70,8 @@ def reduce(cube, base, nproc=1, niter=10):
             med       = np.ma.median(norm,0)
             sig       = norm.std(0)
             norm.mask = (norm > (med+3*sig))
-        print("")
+        if llo==0:
+            print("")
 
         med       = np.ma.median(norm,0)
         norm.mask = False
@@ -83,7 +87,6 @@ def reduce(cube, base, nproc=1, niter=10):
         llo, lhi = lrng
         rlo, rhi = rrng
         norm = np.ma.array(clean_rows[llo:lhi,rlo:rhi].transpose(1,0,2))
-        niter = 10
 
         if llo==0:
             print("REDUCE: running rows {0}-{1}".format(rlo,rhi))
@@ -96,7 +99,8 @@ def reduce(cube, base, nproc=1, niter=10):
             med       = np.ma.median(norm,0)
             sig       = norm.std(0)
             norm.mask = (norm > (med+3*sig))
-        print("")
+        if llo==0:
+            print("")
 
         med       = np.ma.median(norm,0)
         norm.mask = False
@@ -116,7 +120,7 @@ def reduce(cube, base, nproc=1, niter=10):
         ptemp, ctemp = Pipe()
         parents.append(ptemp)
         childs.append(ctemp)
-        ps.append(Process(target=run_rows,args=(childs[ip],cube,lr[ip],niter)))
+        ps.append(Process(target=run_rows,args=(childs[ip],data,lr[ip],niter)))
         ps[ip].start()
 
     for ip in range(nproc):
@@ -153,8 +157,7 @@ def reduce(cube, base, nproc=1, niter=10):
     for fac in [1,2,4]:
         fstr = '{0:04}'.format(nrow/fac)
 
-        opath = os.path.join(HYSS_ENVIRON['HYSS_WRITE'],'raw_subsample',
-                             'nrow{0:04}'.format(nrow/fac))
+        opath = os.path.join(outdir,'nrow{0:04}'.format(nrow/fac))
         
         if not os.path.isdir(opath):
             print("REDUCE: creating {0}".format(opath))
@@ -164,7 +167,7 @@ def reduce(cube, base, nproc=1, niter=10):
 
         fname = base+fstr+'.bin'
         print("REDUCE:   {0}".format(fname))
-        cube.data[:,::fac,::fac].tofile(os.path.join(opath,fname))
+        data[:,::fac,::fac].tofile(os.path.join(opath,fname))
 
         fname = base+fstr+'_flat_row.bin'
         print("REDUCE:   {0}".format(fname))
@@ -175,72 +178,3 @@ def reduce(cube, base, nproc=1, niter=10):
         clean_cols[:,::fac,::fac].tofile(os.path.join(opath,fname))
 
     return
-
-
-
-def subsample():
-    """
-    Reads in the unbinned data cube, slices it, and writes the sub-sampled 
-    result to a file.
-    """
-
-    nwav = 872
-    nrow = 1600
-    ncol = 1560
-
-    fpath  = os.path.join(HYSS_ENVIRON['HYSS_WRITE'],'raw_binned/nrow1600')
-    fnames = ['full_frame_20ms_faster_VNIR_1600.raw',
-              'full_frame_20ms_faster_VNIR_1600_flat.raw']
-
-    for fname in fnames:
-        print("SUBSAMPLE: reading data from {0}".format(fpath))
-        print("SUBSAMPLE:   {0}".format(fname))
-        data = np.fromfile(os.path.join(fpath,fname)).reshape(nwav,nrow,ncol)
-
-        for fac in [2,4,8]:
-            trow  = '{0:04}'.format(1600/fac)
-            opath = os.path.join(HYSS_ENVIRON['HYSS_WRITE'],'raw_subsample',
-                                 'nrow'+trow)
-            oname = fname.replace('1600',trow)
-
-            print("SUBSAMPLE: writing subsampled data to {0}".format(opath))
-            print("SUBSAMPLE:   {0}".format(oname))
-            data[:,::fac,::fac].tofile(open(os.path.join(opath,oname),'wb'))
-
-    return
-
-
-
-def get_dark():
-    """
-    Read in the dark file, generate a smoothed spectrum of the instrument 
-    response, and write to a file.
-    """
-
-    # -- utilities
-    nwav = 872
-    nrow = 1600
-    ncol = 20
-    dpath = "../../data/middleton/night time vnir full frame"
-    dname = "full frame 20ms dark_VNIR.raw"
-    fname = os.path.join(dpath,dname)
-
-    # -- read the file
-    raw   = 1.0*np.fromfile(open(fname,'rb'),np.uint16 \
-                            ).reshape(ncol,nwav,nrow \
-                                      )[:,:,::-1].transpose(1,2,0)
-
-    # -- take the mean spectrum of the upper and lower half and smooth
-    upper = raw[:,:800,:].mean(-1).mean(-1)
-    lower = raw[:,800:,:].mean(-1).mean(-1)
-
-    smoff = [sm.nonparametric.lowess(upper,
-                                     np.arange(len(upper)),frac=0.2)[:,1], 
-             sm.nonparametric.lowess(lower,
-                                     np.arange(len(lower)),frac=0.2)[:,1]]
-
-    return smoff, raw
-
-
-
-
