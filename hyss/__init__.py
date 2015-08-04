@@ -12,10 +12,10 @@ HYSS_ENVIRON = default_environ()
 #  import hyss
 # -------- 
 from .hio import *
-from .hyperheader import *
 from .hypercube import *
+from .hyperheader import *
 from .noaa import *
 from .plotting import *
 from .reduce import *
-
+from .utilities import *
 
