@@ -4,6 +4,7 @@
 import os
 import numpy as np
 import statsmodels.api as sm
+from scipy.ndimage.filters import gaussian_filter as gf
 from .config import HYSS_ENVIRON
 
 
@@ -130,3 +131,80 @@ def get_noaa(dpath=HYSS_ENVIRON['NOAA_DPATH']):
     [os.system(i) for i in cmd]
 
     return
+
+
+def estimate_noise(spec, ind_range=None):
+    """
+    Estimate the noise in a spectrum by computing the noise in the derivative 
+    spectrum.
+
+    This function takes the derivative of an input spectrum and estimates the 
+    noise over a specified index range.
+
+    Parameters
+    ----------
+    spec : ndarray
+        The input spectrum.
+
+    ind_range : 2-element list, optional
+        The index range over which to estimate the noise.
+
+    Returns
+    -------
+    noise : float
+        The noise estimate for the spectrum in input units.
+    """
+
+    # -- set the index range (nb, ends at len(spec)-1 since the derivative has
+    #    one fewer points than the spectrum).
+    ind_range = ind_range if ind_range else [0,spec.shape[0]-1]
+
+    # -- compute the derivative and estimate the noise over the range
+    noise = (spec[1:]-spec[:-1])[ind_range[0]:ind_range[1]].std(0)/np.sqrt(2.0)
+
+    return noise
+
+
+
+def binarize(data, sigma=None, smooth=None):
+    """
+    Convert spectra to boolean values at each wavelength.
+
+    The procedure estimates the noise by taking the standard
+    deviation of the derivative spectrum and dividing by sqrt(2).
+    The zero-point offset for each spectrum is estimated as the
+    mean of the first 10 wavelengths (empirically seen to be
+    "flat" for most spectra) and is removed.  Resultant points
+    >5sigma [default] are given a value of True.
+
+    Parameters
+    ----------
+    sigma : float, optional
+        Sets the threshold, above which the wavelength is considered
+        to have flux.
+    """
+
+    # -- smooth if desired
+    dat = data.T if not smooth else gf(data.T,[0,smooth])
+
+    if sigma:
+        # -- estimate the noise and zero point for each spectrum
+        print("BINARIZE: estimating noise level and zero-point...")
+        sig = (dat[1:]-dat[:-1])[-100:].std(0)/np.sqrt(2.0)
+        zer = dat[:10].mean(0)
+
+        # -- converting to binary
+        print("BINARIZE: converting spectra to boolean...")
+        bdata = (dat-zer)>(sigma*sig)
+    else:
+        # -- careful about diffraction spikes which look like
+        # -- absoportion
+        mn_tot = dat.mean(0)
+        mn_end = dat[-100:].mean(0)
+        index  = mn_tot > mn_end
+        mn     = mn_tot*index + mn_end*~index
+
+        # -- binarize by comparison with mean
+        bdata = dat>mn
+
+    return bdata.T
