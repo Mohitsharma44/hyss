@@ -384,35 +384,3 @@ class HyperCube(object):
         self.ica.fit(norm.T)
 
         return
-
-
-def estimate_noise(spec, ind_range=None):
-    """
-    Estimate the noise in a spectrum by computing the noise in the derivative 
-    spectrum.
-
-    This function takes the derivative of an input spectrum and estimates the 
-    noise over a specified index range.
-
-    Parameters
-    ----------
-    spec : ndarray
-        The input spectrum.
-
-    ind_range : 2-element list, optional
-        The index range over which to estimate the noise.
-
-    Returns
-    -------
-    noise : float
-        The noise estimate for the spectrum in input units.
-    """
-
-    # -- set the index range (nb, ends at len(spec)-1 since the derivative has
-    #    one fewer points than the spectrum).
-    ind_range = ind_range if ind_range else [0,spec.shape[0]-1]
-
-    # -- compute the derivative and estimate the noise over the range
-    noise = (spec[1:]-spec[:-1])[ind_range[0]:ind_range[1]].std(0)/np.sqrt(2.0)
-
-    return noise
