@@ -341,15 +341,116 @@ def plot_kmeans(self, clim=[0,2], cmap='bone', showall=False, xsize=10.):
     return
 
 
-def plot(data, **kwargs):
+
+def noaa_plot(self,ltype,example=None):
     """
-    A wrapper around multiple plotting functions.
+    Plot a specific example or all examples (default) of a lighting type.
+
+    Parameters
+    ----------
+    ltype : str
+        The lighting type key (e.g., 'Fluorescent').
+
+    example : str, optional
+        The key for an example of a specific lighting type (e.g., 
+        'OCTRON 32 W')
     """
 
-    if type(data)==HyperCube:
-        plot_cube(data,**kwargs)
+    # -- set the number of axes for plotting
+    if example:
+        nax = 1
+        nsx = 1
+        nsy = 1
+        exs = [example]
+    else:
+        nax = len(self.data[ltype])
+        nsx = int(np.ceil(np.sqrt(nax)))
+        nsy = int(np.ceil(float(nax)/nsx))
+        exs = self.data[ltype].keys()
+
+    # -- initialize the plots
+    fig = plt.figure(figsize=[max(3*nsx,5),max(3*nsy,5)])
+
+    # -- plot the spectra
+    for ii,ex in enumerate(exs):
+        iax, jax = ii//nsx, ii%nsx
+        ax = fig.add_subplot(nsy,nsx,iax*nsx+jax+1)
+        ax.plot(self.wavelength/1000.,
+                self.data[ltype][ex]/(self.data[ltype][ex].max() + 
+                                      (self.data[ltype][ex].max()==0.0)))
+        ax.set_ylim([0,1])
+        if iax!=nsy-1:
+            ax.set_xticklabels('')
+        if jax!=0:
+            ax.set_yticklabels('')
+        ax.text(ax.get_xlim()[1],ax.get_ylim()[1],ex[:21],ha='right',
+                va='bottom')
+
+
+    # -- add the units
+    fig.text(0.5,0.98,ltype,fontsize=18,ha='center',va='top')
+    fig.text(0.5,0.02,'wavelength [micron]',fontsize=12,ha='center',
+             va='bottom')
+    fig.text(0.02,0.5,'intensity [arb units]',fontsize=12,ha='left',
+             va='center',rotation=90)
+
+    fig.canvas.draw()
+    plt.show()
 
     return
+
+
+
+def noaa_grid_plot(self,cmap='gist_stern',interpolated=False,write=None):
+    """
+    Plot all observed NOAA lab sepctra on an intensity grid.
+
+    Parameters
+    ----------
+    cmap : matplotlib colormap, optional
+        The color map to use.
+
+    interpolated : bool, optional
+        If True, plot interpolated spectra.
+
+    write : str, optional
+        The name of a file to which the image should be written.
+    """
+
+    # -- initialize the figure
+    fig, ax = plt.subplots(figsize=[16,7])
+
+    # -- show the spectra
+    if not interpolated:
+        im = ax.imshow((self.rows.T/self.rows.max(1)).T,aspect=25,
+                       cmap=cmap)
+        ax.set_xticks(np.linspace(150,2150,9))
+        ax.set_xticklabels([str(self.wavelength[int(i)]/1000.) for i in 
+                            np.linspace(150,2150,9)])
+    else:
+        im = ax.imshow((self.irows.T/self.irows.max(1)).T,aspect=12,
+                       cmap=cmap)
+        tind = np.linspace(0,self.iwavelength.size,10,
+                           endpoint=False).astype(int)
+        ax.set_xticks(tind)
+        ax.set_xticklabels([str(self.iwavelength[i]/1000.) for i in tind])
+
+    # -- label the spectra
+    ax.set_yticks(np.arange(self.rows.shape[0])+0.5)
+    ax.set_yticklabels([i+': '+j for [i,j] in self.row_names],va='bottom')
+    ax.set_title('NOAA observed lab sepctra')
+    ax.set_xlabel('wavelength [micron]')
+
+    # -- separate spectra with a grid and adjust to fit in the window
+    ax.grid(1,c='white',ls="-",lw=0.2)
+    fig.subplots_adjust(0.25,0.05,0.98,0.95)
+
+    # -- save the figure if desired
+    if write:
+        fig.savefig(write)
+
+    return
+
 
 
 def make_plots():
@@ -361,3 +462,18 @@ def make_plots():
     plot_noaa_autocorr(noaa,interpolation=True,thr=0.8,cmap='gist_heat',
                        write=os.path.join(os.environ['HYSS_WRITE'],'plots',
                                           'noaa_autocorrelation.pdf'))
+
+
+
+def plot(data, **kwargs):
+    """
+    A wrapper around multiple plotting functions.
+    """
+
+    if type(data)==HyperCube:
+        plot_cube(data,**kwargs)
+
+    return
+
+
+
