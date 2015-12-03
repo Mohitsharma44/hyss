@@ -199,12 +199,12 @@ def binarize(data, sigma=None, smooth=None):
     else:
         # -- careful about diffraction spikes which look like
         # -- absoportion
-        mn_tot = dat.mean(0)
-        mn_end = dat[-100:].mean(0)
-        index  = mn_tot > mn_end
-        mn     = mn_tot*index + mn_end*~index
+#        mn_tot = dat.mean(0)
+#        mn_end = dat[-100:].mean(0)
+#        index  = mn_tot > mn_end
+#        mn     = mn_tot*index + mn_end*~index
 
         # -- binarize by comparison with mean
-        bdata = dat>mn
+        bdata = dat>dat.mean(0)
 
     return bdata.T
