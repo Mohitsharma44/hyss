@@ -6,6 +6,7 @@ import hyss
 import hyss_util as hu
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import colorConverter
 
 #################
 # Plot defaults #
@@ -162,42 +163,51 @@ clean = np.fromfile(os.path.join("../output/vn_binned/nrow1600",
 dname = "full frame 20ms dark_VNIR.raw"
 dark  = hu.read_hyper(os.path.join(dpath,dname))
 
-
-
-
 # -- set the Manhattan bridge region
 rr = [600,850]
 cr = [50,250]
 
-gnorm = np.fromfile('../output/rowcol3sigreg.bin').reshape(872,1600,1560)
-gnorm_L = gnorm.mean(0)
+# -- get the postage stamps
+stamp_raw = cube.data[:,rr[0]:rr[1],cr[0]:cr[1]]
+stamp_cln = clean[:,rr[0]:rr[1],cr[0]:cr[1]]
 
-spec0 = cube.data[:,rr[0]:rr[1],cr[0]:cr[1]].mean(-1).mean(-1)
-spec1 = clean1[:,rr[0]:rr[1],cr[0]:cr[1]].mean(-1).mean(-1)
-spec2 = gnorm[:,rr[0]:rr[1],cr[0]:cr[1]].mean(-1).mean(-1)
+# -- get the spectra
+spec_raw = stamp_raw.mean(-1).mean(-1)
+spec_cln = stamp_cln.mean(-1).mean(-1)
+spec_dsb = (stamp_raw.transpose(2,0,1) - dark.data[:,rr[0]:rr[1]].mean(-1)) \
+    .transpose(1,2,0).mean(-1).mean(-1)
 
-close('all')
-fig, ax = plt.subplots(2,1,figsize=[7.5,7.5])
-fig.subplots_adjust(0.1,0.08,0.95,0.95,0.05,0.07)
-#fig = figure(figsize=[7.5,3.75])
-#ax = []
-#ax.append(fig.add_axes([0.1,0.3,0.85,0.75]))
-#ax.append(fig.add_axes([0.1,0.1,0.85,0.2]))
-ax[1].plot(cube.wavelength*1e-3,spec0,color='#222222',label='raw')
-ax[1].plot(cube.wavelength*1e-3,spec1+55.14,color='darkred',label='raw - dark')
-ax[1].plot(cube.wavelength*1e-3,spec2+57.75+0.5,color='dodgerblue',
-           label='cleaned')
-ax[1].grid(1)
-ax[1].legend(loc=4)
-ax[1].set_xlabel('wavelength [$\mu$m]')
-ax[1].set_ylabel('intensity [arb units and offset]')
-ax[0].imshow(gnorm_L[rr[0]:rr[1],cr[0]:cr[1]],cmap='bone',clim=[-0.5,4.5],
-             aspect=0.45)
-#ax[0].imshow(clean1_L[rr[0]:rr[1],cr[0]:cr[1]],cmap='bone',clim=[0,6],
-#             aspect=0.45)
-ax[0].axis('off')
+# -- plot utils
+specs = np.array([spec_raw,spec_dsb,spec_cln]).T
+offs  = np.array([0,55.14,58.25])
+clrs  = ["#333333","darkred","dodgerblue"]
+labs  = ["raw","raw - dark","cleaned"]
+
+# -- plot spectra
+fig, ax = plt.subplots(figsize=[6.5,3.75])
+fig.subplots_adjust(bottom=0.15)
+ax.grid(1)
+lins    = ax.plot(cube.waves*1e-3,specs+offs)
+[lin.set_color(colorConverter.to_rgb(clr)) for lin,clr in zip(lins,clrs)]
+ax.legend(lins,labs,loc="lower right",frameon=False)
+ax.set_ylabel("intensity [arb units and offset]")
+ax.set_xlabel("wavelength [micron]")
+ax.set_xlim(cube.waves[0]*1e-3,cube.waves[-1]*1e-3)
+
+# -- set the title
+yr = ax.get_ylim()
+ax.text(ax.get_xlim()[1],yr[1]+0.02*(yr[1]-yr[0]),
+        "Manhattan Bridge region spectrum", fontsize=txtsz, ha="right")
+
+# -- add the image
+ax_im   = fig.add_axes((0.35,0.175,0.3,0.3))
+im      = ax_im.imshow(stamp_cln.mean(0), interpolation="nearest", cmap="bone",
+                       clim=[-0.5,4.5],aspect=0.45)
+ax_im.axis("off")
 fig.canvas.draw()
-fig.savefig('../output/bridge_clean.png',clobber=True)
+
+# -- save figure
+fig.savefig('../output/bridge_clean.eps',clobber=True)
 
 
 
