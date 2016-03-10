@@ -134,10 +134,10 @@ def plot_img(data, rgb=False, aspect=0.45, cmap="bone", clim=None, title="",
 #fig.savefig("../output/dark_spectrum.eps")
 
 
-######################
-# Dark removed image #
-######################
-
+#######################
+## Dark removed image #
+#######################
+#
 ## -- load the image and plot it
 #plot_img(np.load("../output/dark_sub_L.npy"), clim=[0,6],
 #                 title="Dark-Subtracted Total Intensity",
@@ -184,13 +184,12 @@ clrs  = ["#333333","darkred","dodgerblue"]
 labs  = ["raw","raw - dark","cleaned"]
 
 # -- plot spectra
-fig, ax = plt.subplots(figsize=[6.5,3.75])
-fig.subplots_adjust(bottom=0.15)
-ax.grid(1)
+fig, ax = plt.subplots(figsize=[3.25,1.875])
+fig.subplots_adjust(0.18,0.22,0.975,0.9)
 lins    = ax.plot(cube.waves*1e-3,specs+offs)
 [lin.set_color(colorConverter.to_rgb(clr)) for lin,clr in zip(lins,clrs)]
-ax.legend(lins,labs,loc="lower right",frameon=False)
-ax.set_ylabel("intensity [arb units and offset]")
+ax.legend(lins,labs,loc="lower right",frameon=False,fontsize=8)
+ax.set_ylabel("intensity \n [arb units & offset]")
 ax.set_xlabel("wavelength [micron]")
 ax.set_xlim(cube.waves[0]*1e-3,cube.waves[-1]*1e-3)
 
@@ -200,16 +199,14 @@ ax.text(ax.get_xlim()[1],yr[1]+0.02*(yr[1]-yr[0]),
         "Manhattan Bridge region spectrum", fontsize=txtsz, ha="right")
 
 # -- add the image
-ax_im   = fig.add_axes((0.35,0.175,0.3,0.3))
+ax_im   = fig.add_axes((0.4,0.25,0.25,0.25))
 im      = ax_im.imshow(stamp_cln.mean(0), interpolation="nearest", cmap="bone",
-                       clim=[-0.5,4.5],aspect=0.45)
+                       clim=[0,2],aspect=0.45)
 ax_im.axis("off")
 fig.canvas.draw()
 
 # -- save figure
 fig.savefig('../output/bridge_clean.eps',clobber=True)
-
-
 
 
 ########################
@@ -255,9 +252,54 @@ fig.savefig('../output/bridge_clean.eps',clobber=True)
 #fig.savefig("../output/noaa_observed.eps", clobber=True)
 
 
-########################
-# NOAA correlated grid #
-########################
+#########################
+## NOAA correlated grid #
+#########################
+#
+## -- get the auto-correlation
+#corr = noaa.auto_correlate(interpolation=interpolation)
+#
+## -- set up the figure
+#rat = 2.0/3.0
+#xs  = 10.0
+#ys  = xs*rat
+#fig, ax = plt.subplots(figsize=[xs,ys])
+#fig.subplots_adjust(0.33,0.05,0.93,0.95)
+#
+## -- if desired, flag correlations above some threshold
+#if thr:
+#    aind = np.arange(corr.size).reshape(corr.shape)[corr>thr]
+#    xind = aind % corr.shape[0]
+#    yind = aind // corr.shape[0]
+#    pnts = ax.plot(xind,yind,'.',ms=15,color=[0.05,0.3,1.0])
+#
+#    ax.text(corr.shape[0]-0.5,-0.5,
+#            'correlation > {0}%'.format(int(thr*100)),
+#            ha='right',va='bottom',size=12,color=[0.05,0.3,1.0])
+#
+## -- plot the correlation and label
+#im = ax.imshow(corr,cmap=cmap,clim=[-1,1])
+#ax.axis('off')
+#[ax.text(-2,i,"{0}: {1}".format(s[0],s[1]),ha='right',va='center',
+#          fontsize=8) for i,s in enumerate(noaa.row_names)]
+#
+## -- add color bar
+#cbax = fig.add_axes([0.94,0.05,0.02,0.9])
+#cbax.imshow(np.arange(1000,0,-1).reshape(100,10)//10,clim=[0,100],
+#            cmap=cmap,aspect=0.9/0.02/10)
+#cbax.text(25,0,'1',fontsize=12,ha='right',va='top')
+#cbax.text(25,100,'-1',fontsize=12,ha='right',va='bottom')
+#cbax.text(15,50,'NOAA auto-correlation coefficients',fontsize=12,
+#          va='center',rotation=270)
+#cbax.axis('off')
+#
+#fig.canvas.draw()
+#
+## -- write the file if desired
+#if write:
+#    fig.savefig(write)
+
+
 
 
 ########################
