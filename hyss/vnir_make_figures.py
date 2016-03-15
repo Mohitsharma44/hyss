@@ -7,15 +7,17 @@ import hyss_util as hu
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import colorConverter
+from scipy.ndimage.filters import gaussian_filter as gf
 
 #################
 # Plot defaults #
 #################
 txtsz = 10
-plt.rcParams["xtick.labelsize"] = txtsz
-plt.rcParams["ytick.labelsize"] = txtsz
-plt.rcParams["axes.labelsize"]  = txtsz
-plt.rcParams["legend.fontsize"] = txtsz
+plt.rcParams["xtick.labelsize"]     = txtsz
+plt.rcParams["ytick.labelsize"]     = txtsz
+plt.rcParams["axes.labelsize"]      = txtsz
+plt.rcParams["legend.fontsize"]     = txtsz
+plt.rcParams["image.interpolation"] = "nearest"
 
 
 ###############
@@ -144,69 +146,69 @@ def plot_img(data, rgb=False, aspect=0.45, cmap="bone", clim=None, title="",
 #                 outname="../output/dark_sub.eps")
 
 
-####################
-# Cleaned spectrum #
-####################
-
-# -- load the raw data cube
-home  = os.path.expanduser("~")
-dpath = os.path.join(home,"data/middleton/night time vnir full frame/")
-fname = "full frame 20ms faster_VNIR.raw"
-cube  = hu.read_hyper(os.path.join(dpath,fname))
-
-# -- load the cleaned data cube
-clean = np.fromfile(os.path.join("../output/vn_binned/nrow1600",
-                                 "full_frame_20ms_faster_VNIR1600_flat.bin"),
-                    dtype=float).reshape(cube.data.shape)
-
-# -- load the dark
-dname = "full frame 20ms dark_VNIR.raw"
-dark  = hu.read_hyper(os.path.join(dpath,dname))
-
-# -- set the Manhattan bridge region
-rr = [600,850]
-cr = [50,250]
-
-# -- get the postage stamps
-stamp_raw = cube.data[:,rr[0]:rr[1],cr[0]:cr[1]]
-stamp_cln = clean[:,rr[0]:rr[1],cr[0]:cr[1]]
-
-# -- get the spectra
-spec_raw = stamp_raw.mean(-1).mean(-1)
-spec_cln = stamp_cln.mean(-1).mean(-1)
-spec_dsb = (stamp_raw.transpose(2,0,1) - dark.data[:,rr[0]:rr[1]].mean(-1)) \
-    .transpose(1,2,0).mean(-1).mean(-1)
-
-# -- plot utils
-specs = np.array([spec_raw,spec_dsb,spec_cln]).T
-offs  = np.array([0,55.14,58.25])
-clrs  = ["#333333","darkred","dodgerblue"]
-labs  = ["raw","raw - dark","cleaned"]
-
-# -- plot spectra
-fig, ax = plt.subplots(figsize=[3.25,1.875])
-fig.subplots_adjust(0.18,0.22,0.975,0.9)
-lins    = ax.plot(cube.waves*1e-3,specs+offs)
-[lin.set_color(colorConverter.to_rgb(clr)) for lin,clr in zip(lins,clrs)]
-ax.legend(lins,labs,loc="lower right",frameon=False,fontsize=8)
-ax.set_ylabel("intensity \n [arb units & offset]")
-ax.set_xlabel("wavelength [micron]")
-ax.set_xlim(cube.waves[0]*1e-3,cube.waves[-1]*1e-3)
-
-# -- set the title
-yr = ax.get_ylim()
-ax.text(ax.get_xlim()[1],yr[1]+0.02*(yr[1]-yr[0]),
-        "Manhattan Bridge region spectrum", fontsize=txtsz, ha="right")
-
-# -- add the image
-ax_im   = fig.add_axes((0.4,0.25,0.25,0.25))
-im      = ax_im.imshow(stamp_cln.mean(0), interpolation="nearest", cmap="bone",
-                       clim=[0,2],aspect=0.45)
-ax_im.axis("off")
-fig.canvas.draw()
-
-# -- save figure
-fig.savefig('../output/bridge_clean.eps',clobber=True)
+#####################
+## Cleaned spectrum #
+#####################
+#
+## -- load the raw data cube
+#home  = os.path.expanduser("~")
+#dpath = os.path.join(home,"data/middleton/night time vnir full frame/")
+#fname = "full frame 20ms faster_VNIR.raw"
+#cube  = hu.read_hyper(os.path.join(dpath,fname))
+#
+## -- load the cleaned data cube
+#clean = np.fromfile(os.path.join("../output/vn_binned/nrow1600",
+#                                 "full_frame_20ms_faster_VNIR1600_flat.bin"),
+#                    dtype=float).reshape(cube.data.shape)
+#
+## -- load the dark
+#dname = "full frame 20ms dark_VNIR.raw"
+#dark  = hu.read_hyper(os.path.join(dpath,dname))
+#
+## -- set the Manhattan bridge region
+#rr = [600,850]
+#cr = [50,250]
+#
+## -- get the postage stamps
+#stamp_raw = cube.data[:,rr[0]:rr[1],cr[0]:cr[1]]
+#stamp_cln = clean[:,rr[0]:rr[1],cr[0]:cr[1]]
+#
+## -- get the spectra
+#spec_raw = stamp_raw.mean(-1).mean(-1)
+#spec_cln = stamp_cln.mean(-1).mean(-1)
+#spec_dsb = (stamp_raw.transpose(2,0,1) - dark.data[:,rr[0]:rr[1]].mean(-1)) \
+#    .transpose(1,2,0).mean(-1).mean(-1)
+#
+## -- plot utils
+#specs = np.array([spec_raw,spec_dsb,spec_cln]).T
+#offs  = np.array([0,55.14,58.25])
+#clrs  = ["#333333","darkred","dodgerblue"]
+#labs  = ["raw","raw - dark","cleaned"]
+#
+## -- plot spectra
+#fig, ax = plt.subplots(figsize=[3.25,1.875])
+#fig.subplots_adjust(0.18,0.22,0.975,0.9)
+#lins    = ax.plot(cube.waves*1e-3,specs+offs)
+#[lin.set_color(colorConverter.to_rgb(clr)) for lin,clr in zip(lins,clrs)]
+#ax.legend(lins,labs,loc="lower right",frameon=False,fontsize=8)
+#ax.set_ylabel("intensity \n [arb units & offset]")
+#ax.set_xlabel("wavelength [micron]")
+#ax.set_xlim(cube.waves[0]*1e-3,cube.waves[-1]*1e-3)
+#
+## -- set the title
+#yr = ax.get_ylim()
+#ax.text(ax.get_xlim()[1],yr[1]+0.02*(yr[1]-yr[0]),
+#        "Manhattan Bridge region spectrum", fontsize=txtsz, ha="right")
+#
+## -- add the image
+#ax_im   = fig.add_axes((0.4,0.25,0.25,0.25))
+#im      = ax_im.imshow(gf(stamp_cln.mean(0),2), interpolation="nearest", 
+#                       cmap="bone", clim=[0,0.5],aspect=0.45)
+#ax_im.axis("off")
+#fig.canvas.draw()
+#
+## -- save figure
+#fig.savefig('../output/bridge_clean.eps',clobber=True)
 
 
 ########################
@@ -257,64 +259,102 @@ fig.savefig('../output/bridge_clean.eps',clobber=True)
 #########################
 #
 ## -- get the auto-correlation
-#corr = noaa.auto_correlate(interpolation=interpolation)
+#dpath = os.path.join(os.path.expanduser("~"),
+#                       "data/middleton/night time vnir full frame/")
+#fname = "full frame 20ms dark_VNIR.raw"
+#waves = hu.read_header(os.path.join(dpath,fname).replace("raw","hdr"))["waves"]
+#noaa  = hyss.read_noaa("/home/cusp/gdobler/hyss/data/noaa")
+#noaa.interpolate(waves)
+#corr  = noaa.auto_correlate(interpolation=True)
 #
 ## -- set up the figure
 #rat = 2.0/3.0
-#xs  = 10.0
+#xs  = 6.5
 #ys  = xs*rat
 #fig, ax = plt.subplots(figsize=[xs,ys])
 #fig.subplots_adjust(0.33,0.05,0.93,0.95)
 #
 ## -- if desired, flag correlations above some threshold
+#thr = 0.9
 #if thr:
 #    aind = np.arange(corr.size).reshape(corr.shape)[corr>thr]
 #    xind = aind % corr.shape[0]
 #    yind = aind // corr.shape[0]
-#    pnts = ax.plot(xind,yind,'.',ms=15,color=[0.05,0.3,1.0])
+#    pnts = ax.plot(xind,yind,'.',ms=10,color=[0.05,0.3,1.0])
 #
 #    ax.text(corr.shape[0]-0.5,-0.5,
 #            'correlation > {0}%'.format(int(thr*100)),
-#            ha='right',va='bottom',size=12,color=[0.05,0.3,1.0])
+#            ha='right',va='bottom',size=txtsz,color=[0.05,0.3,1.0])
 #
 ## -- plot the correlation and label
-#im = ax.imshow(corr,cmap=cmap,clim=[-1,1])
+#cmap = "gist_heat"
+#im   = ax.imshow(corr,cmap=cmap,clim=[-1,1])
 #ax.axis('off')
-#[ax.text(-2,i,"{0}: {1}".format(s[0],s[1]),ha='right',va='center',
-#          fontsize=8) for i,s in enumerate(noaa.row_names)]
+#[ax.text(-2,i,"{0}: {1}".format(s[0],s[1]).replace("_"," "),ha='right',
+#          va='center', fontsize=5) for i,s in enumerate(noaa.row_names)]
 #
 ## -- add color bar
 #cbax = fig.add_axes([0.94,0.05,0.02,0.9])
 #cbax.imshow(np.arange(1000,0,-1).reshape(100,10)//10,clim=[0,100],
 #            cmap=cmap,aspect=0.9/0.02/10)
-#cbax.text(25,0,'1',fontsize=12,ha='right',va='top')
-#cbax.text(25,100,'-1',fontsize=12,ha='right',va='bottom')
-#cbax.text(15,50,'NOAA auto-correlation coefficients',fontsize=12,
+#cbax.text(25,0,'1',fontsize=txtsz,ha='right',va='top')
+#cbax.text(25,100,'-1',fontsize=txtsz,ha='right',va='bottom')
+#cbax.text(15,50,'NOAA auto-correlation coefficients',fontsize=txtsz,
 #          va='center',rotation=270)
 #cbax.axis('off')
 #
+## -- write the file
 #fig.canvas.draw()
+#fig.savefig("../output/noaa_autocorrelation.eps", clobber=True)
+
+
+#########################
+## NOAA final templates #
+#########################
 #
-## -- write the file if desired
-#if write:
-#    fig.savefig(write)
-
-
-
-
-########################
-# NOAA final templates #
-########################
+## -- read the NOAA data
+#waves = np.load('../output/vnir_waves.npy')
+#noaa  = hyss.read_noaa("/home/cusp/gdobler/hyss/data/noaa")
+#
+## -- remove the correlated spectra
+#noaa.interpolate(waves)
+#noaa.remove_correlated()
+#
+## -- initialize the figure
+#xs      = 6.5
+#ys      = 2
+#asp     = float(noaa.irows.shape[1])/noaa.irows.shape[0] * ys/xs * 1.0
+#fig, ax = plt.subplots(figsize=[xs,ys])
+#
+## -- show the spectra
+#xtval = np.linspace(0.4,1.0,7)
+#xtind = np.searchsorted(waves*1e-3,xtval)
+#im    = ax.imshow(noaa.irows/noaa.irows.max(1,keepdims=True), aspect=asp, 
+#                  cmap="gist_stern")
+#ax.set_xticks(xtind)
+#ax.set_xticklabels(xtval,fontsize=txtsz)
+#
+## -- label the spectra
+#xr = ax.get_xlim()
+#yr = ax.get_ylim()
+#ax.set_yticks(np.arange(noaa.irows.shape[0])+0.5)
+#ax.set_yticklabels([(i+': '+j).replace("_"," ") for [i,j] in noaa.row_names], 
+#                   va="baseline", fontsize=5)
+#ax.tick_params("y", length=0)
+#ax.text(xr[1],yr[1]-0.02*(yr[0]-yr[1]),"NOAA observed lab sepctra",
+#        ha="right",fontsize=txtsz)
+#ax.set_xlabel("wavelength [micron]",fontsize=txtsz)
+#
+## -- separate spectra with a grid and adjust to fit in the window
+#fig.subplots_adjust(0.3,0.225,0.975,0.90)
+#
+#fig.canvas.draw()
+#fig.savefig("../output/noaa_observed_final.eps", clobber=True)
 
 
 ######################
 ## Active Pixel Mask #
 ######################
-#
-#import hyss
-#import numpy as np
-##import matplotlib.pyplot as plt
-#from scipy.ndimage.filters import gaussian_filter as gf
 #
 ## -- load the active pixels mask
 #mask = np.load("../output/cube_ind.npy")
@@ -416,10 +456,6 @@ fig.savefig('../output/bridge_clean.eps',clobber=True)
 ## Correlation Matrix #
 #######################
 #
-#import numpy as np
-#import matplotlib.pyplot as plt
-#import hyss
-#
 ## -- load the data
 #ucc   = np.load('../output/ucc_nrow1600.npy')
 #waves = np.load('../output/vnir_waves.npy')
@@ -429,9 +465,9 @@ fig.savefig('../output/bridge_clean.eps',clobber=True)
 #
 ## -- display the correlations
 #plt.close('all')
-#fs = [6.5,4.0]
+#fs = [6.5,4.75]
 #fig = plt.figure(figsize=fs)
-#ax  = fig.add_axes([0.35,0.075,0.85*fs[1]/fs[0],0.85])
+#ax  = fig.add_axes([0.265,0.075,0.85*fs[1]/fs[0],0.85])
 #im = ax.imshow(ucc,clim=[-1,1],interpolation='nearest',cmap='RdBu_r',
 #               aspect=float(ucc.shape[1])/ucc.shape[0])
 #ax.set_yticks(range(noaa.irows.shape[0]))
@@ -444,7 +480,7 @@ fig.savefig('../output/bridge_clean.eps',clobber=True)
 #        va='bottom',fontsize=txtsz)
 #
 ## -- add a colorbar
-#cb = fig.add_axes([0.875,0.075,0.05,0.85])
+#cb = fig.add_axes([0.89,0.075,0.05,0.85])
 #cb.imshow(np.arange(1000).reshape(200,5)//5,interpolation='nearest',
 #          cmap='RdBu')
 #yr = cb.get_ylim()
