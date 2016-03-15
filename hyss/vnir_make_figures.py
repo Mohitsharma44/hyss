@@ -4,6 +4,7 @@
 import os
 import hyss
 import hyss_util as hu
+import pickle as pkl
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import colorConverter
@@ -202,7 +203,7 @@ def plot_img(data, rgb=False, aspect=0.45, cmap="bone", clim=None, title="",
 #
 ## -- add the image
 #ax_im   = fig.add_axes((0.4,0.25,0.25,0.25))
-#im      = ax_im.imshow(gf(stamp_cln.mean(0),2), interpolation="nearest", 
+#im      = ax_im.imshow(gf(stamp_cln.mean(0),2), interpolation="nearest",
 #                       cmap="bone", clim=[0,0.5],aspect=0.45)
 #ax_im.axis("off")
 #fig.canvas.draw()
@@ -329,7 +330,7 @@ def plot_img(data, rgb=False, aspect=0.45, cmap="bone", clim=None, title="",
 ## -- show the spectra
 #xtval = np.linspace(0.4,1.0,7)
 #xtind = np.searchsorted(waves*1e-3,xtval)
-#im    = ax.imshow(noaa.irows/noaa.irows.max(1,keepdims=True), aspect=asp, 
+#im    = ax.imshow(noaa.irows/noaa.irows.max(1,keepdims=True), aspect=asp,
 #                  cmap="gist_stern")
 #ax.set_xticks(xtind)
 #ax.set_xticklabels(xtval,fontsize=txtsz)
@@ -338,7 +339,7 @@ def plot_img(data, rgb=False, aspect=0.45, cmap="bone", clim=None, title="",
 #xr = ax.get_xlim()
 #yr = ax.get_ylim()
 #ax.set_yticks(np.arange(noaa.irows.shape[0])+0.5)
-#ax.set_yticklabels([(i+': '+j).replace("_"," ") for [i,j] in noaa.row_names], 
+#ax.set_yticklabels([(i+': '+j).replace("_"," ") for [i,j] in noaa.row_names],
 #                   va="baseline", fontsize=5)
 #ax.tick_params("y", length=0)
 #ax.text(xr[1],yr[1]-0.02*(yr[0]-yr[1]),"NOAA observed lab sepctra",
@@ -498,6 +499,62 @@ def plot_img(data, rgb=False, aspect=0.45, cmap="bone", clim=None, title="",
 ######################
 # K-Means clustering #
 ######################
+
+# -- read in the K-Means results, wavelengths, and spectra
+km    = np.load("../output/vnir_night_fac1_km.pkl")
+waves = np.load("../output/vnir_waves.npy")
+specs = np.load('../output/specs_nrow1600.npy')
+
+# this is the wrong number of spectra...
+# 1. Find out where this file came from
+# 2. Find out the difference (noise pixels I think)
+# 3. Reproduce the original file
+# 4. Reproduce the updated file
+# 5. Reproduce the K-Means file
+# 6. Produce the updated K-Means file
+
+#specs  = cube.data[:,cube.ind].copy()
+#specs -= specs.mean(0)
+#specs /= specs.std(0)
+#
+#waves = cube.wavelength*1e-3
+#nr, nc = 3, 5
+#xs = 10.0
+#ys = xs*float(nr)/float(nc)
+#plt.close('all')
+#fig, ax = plt.subplots(nr,nc,figsize=[xs,ys])
+#
+#for ii,ex in enumerate(cube.km.cluster_centers_):
+#    iax, jax = ii//nc, ii%nc
+#
+#    off, scl = ex.min(), (ex-ex.min()).max()/0.9
+#    tax = ax[iax][jax]
+#
+##    tax.plot(waves,specs[:,cube.km.labels_==ii][:,:5],lw=0.1,
+##             color='darkgoldenrod')
+#    sig = specs[:,cube.km.labels_==ii].std(1)
+#    tax.fill_between(waves,ex-sig,ex+sig,lw=0,color='darkgoldenrod')
+#    tax.plot(waves,ex,color='darkred')
+#    tax.set_xlim([0.4,1.0])
+#    tax.set_ylim([-2,6.0])
+#    tax.grid(1)
+#
+#    tax.text(tax.get_xlim()[1],tax.get_ylim()[1],"cluster {0}".format(ii),
+#             ha='right',va='bottom')
+#
+#    if iax!=nr-1:
+#        tax.set_xticklabels('')
+#    else:
+#        tax.set_xticks([0.4,0.6,0.8,1.0])
+#    if jax!=0:
+#        tax.set_yticklabels('')
+#
+#fig.text(0.5,0.03,'wavelength [$\mu$m]',ha='center')
+#fig.text(0.05,0.5,'intensity [arb units and offset]',va='center',rotation=90)
+#fig.canvas.draw()
+#fig.savefig('../output/km_cluster_centers.png',clobber=True)
+
+
 
 
 #########################
