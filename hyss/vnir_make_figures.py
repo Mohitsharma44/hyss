@@ -496,75 +496,149 @@ def plot_img(data, rgb=False, aspect=0.45, cmap="bone", clim=None, title="",
 #fig.savefig("../output/correlation_coeffs.eps",clobber=True)
 
 
-######################
-# K-Means clustering #
-######################
-
-# -- read in the K-Means results, wavelengths, and spectra
-km    = np.load("../output/vnir_night_fac1_km.pkl")
-waves = np.load("../output/vnir_waves.npy")
-specs = np.load('../output/specs_nrow1600.npy')
-
-# this is the wrong number of spectra...
-# 1. Find out where this file came from
-# 2. Find out the difference (noise pixels I think)
-# 3. Reproduce the original file
-# 4. Reproduce the updated file
-# 5. Reproduce the K-Means file
-# 6. Produce the updated K-Means file
-
-#specs  = cube.data[:,cube.ind].copy()
+#######################
+## K-Means clustering #
+#######################
+#
+## -- read in the K-Means results, wavelengths, and spectra
+#km    = np.load("../output/km_cluster.pkl")
+#waves = np.load("../output/vnir_waves.npy")*1e-3
+#specs = np.load('../output/specs_nrow1600.npy').T
+#
+## -- normalize spectra
 #specs -= specs.mean(0)
 #specs /= specs.std(0)
 #
-#waves = cube.wavelength*1e-3
-#nr, nc = 3, 5
-#xs = 10.0
+## -- plot it
+#nr = 3
+#nc = 5
+#xs = 6.5
 #ys = xs*float(nr)/float(nc)
-#plt.close('all')
-#fig, ax = plt.subplots(nr,nc,figsize=[xs,ys])
+#fig, ax = plt.subplots(nr, nc, figsize=(xs,ys), sharex=True, sharey=True)
+#fig.subplots_adjust(0.085,0.115,0.975,0.95)
 #
-#for ii,ex in enumerate(cube.km.cluster_centers_):
+#for ii, ex in enumerate(km.cluster_centers_):
 #    iax, jax = ii//nc, ii%nc
-#
 #    off, scl = ex.min(), (ex-ex.min()).max()/0.9
 #    tax = ax[iax][jax]
 #
-##    tax.plot(waves,specs[:,cube.km.labels_==ii][:,:5],lw=0.1,
-##             color='darkgoldenrod')
-#    sig = specs[:,cube.km.labels_==ii].std(1)
+#    sig = specs[:,km.labels_==ii].std(1)
 #    tax.fill_between(waves,ex-sig,ex+sig,lw=0,color='darkgoldenrod')
 #    tax.plot(waves,ex,color='darkred')
 #    tax.set_xlim([0.4,1.0])
 #    tax.set_ylim([-2,6.0])
+#    tax.set_xticks(np.arange(0.4,1.1,0.1))
+#    tax.set_xticklabels(["","0.5","","0.7","","0.9",""])
+#    tax.set_yticks(np.arange(-2,7,1))
+#    tax.set_yticklabels(["-2","","0","","2","","4","","6"])
 #    tax.grid(1)
 #
-#    tax.text(tax.get_xlim()[1],tax.get_ylim()[1],"cluster {0}".format(ii),
-#             ha='right',va='bottom')
+#    tax.text(tax.get_xlim()[1],tax.get_ylim()[1],"cluster {0}".format(ii+1),
+#             ha='right',va='bottom',fontsize=txtsz)
 #
-#    if iax!=nr-1:
-#        tax.set_xticklabels('')
-#    else:
-#        tax.set_xticks([0.4,0.6,0.8,1.0])
-#    if jax!=0:
-#        tax.set_yticklabels('')
-#
-#fig.text(0.5,0.03,'wavelength [$\mu$m]',ha='center')
-#fig.text(0.05,0.5,'intensity [arb units and offset]',va='center',rotation=90)
+#fig.text(0.5,0.03,'wavelength [$\mu$m]',ha='center',fontsize=txtsz)
+#fig.text(0.025,0.5,'intensity [arb units and offset]',va='center',
+#         rotation=90,fontsize=txtsz)
 #fig.canvas.draw()
-#fig.savefig('../output/km_cluster_centers.png',clobber=True)
+#fig.savefig('../output/km_cluster_centers.eps',clobber=True)
 
 
-
-
-#########################
-# Clustering comparison #
-#########################
+##########################
+## Clustering comparison #
+##########################
+#
+## -- the corresponding indices
+##    noaa index  cluster index
+##    0           1, 8, **10**, 14
+##    11          **3**, 12
+##    14          **5**
+#
+## -- load the K-Means solution and noaa
+#km    = pkl.load(open("../output/km_cluster.pkl"))
+#noaa  = hyss.read_noaa("../data/noaa")
+#waves = np.load("../output/vnir_waves.npy")
+#noaa.interpolate(waves)
+#noaa.remove_correlated()
+#
+## -- select the noaa templates and the corresponding K-Menas clusters
+#cind = np.array([10,3,5])
+#nind = np.array([0,11,14])
+#nos  = noaa.irows[nind]
+#kms  = km.cluster_centers_[cind]
+#
+## -- make the plot
+#fig, ax = plt.subplots(3,1,figsize=[3.25,6.5],sharex=True)
+#fig.subplots_adjust(0.15,0.075,0.95,0.975)
+#
+#for ii,(tno,tkm,tname) in enumerate(zip(nos,kms,noaa.row_names[nind])):
+#
+#    tno -= tno.mean()
+#    tno /= tno.std()
+#
+#    amp, off = np.polyfit(tkm,tno,1)
+#    model    = amp*tkm+off
+#
+#    link, = ax[ii].plot(waves*1e-3,model,color="darkred")
+#    linn, = ax[ii].plot(waves*1e-3,tno,color="dodgerblue")
+#
+#    ax[ii].set_xlim(0.4,1.0)
+#    ax[ii].set_ylim(-1,10.0)
+#    ax[ii].grid(1)
+#    ax[ii].legend([link,linn], 
+#                  ["cluster {0}".format(cind[ii]),tname[0].replace("_"," ")],
+#                  frameon=False)
+#ax[2].set_xlabel("wavelength [micron]")
+#fig.text(0.05,0.5,"intensity [arbitrary units and offset]",fontsize=txtsz,
+#         rotation=90,ha="center",va="center")
+#fig.canvas.draw()
+#fig.savefig("../output/km_cluster_noaa_comp.eps", clobber=True)
 
 
 ##############################
 # Lighting technology labels #
 ##############################
+
+# -- the technologies are 
+#    1,8,**10**,13,14 (number 1)
+#    2 (number 2)
+#    3,12 (number 3)
+#    4, **5** (number 4)
+#    0 (number 5)
+#    7 (number 6)
+
+# -- load the K-Means clusters
+km = pkl.load(open("../output/km_cluster.pkl"))
+
+# -- load the integrated image
+img_L = np.load("../output/img_L_arr.npy")
+ind   = img_L > 0.5
+ind  = (gf(1.0*ind,1)>0.25)*ind
+
+# -- set the colors, types, and KM indices
+clrs  = ['#E24A33','#8EBA42','#348ABD','#988ED5','#FBC15E','#FFB5B8']
+types = ['High\nPressure\nSodium','LED','Fluorescent','Fluorescent',
+         'Metal\nHalide','LED','LED']
+kinds = [np.array([10,1,8,14]), np.array([2]), np.array([3,12]),
+         np.array([5,4]), np.array([0]), np.array([7])]
+
+# -- get the x/y positions of all active pixels
+pos      = np.arange(img_L.size).reshape(img_L.shape)[ind]
+xpos_all = pos % img_L.shape[1]
+ypos_all = pos // img_L.shape[1]
+
+# -- get the positions for each type
+xpos = []
+ypos = []
+for ii in range(len(kinds)):
+    txpos = np.hstack([xpos_all[km.labels_==kind] for kind in kinds[ii]])
+    typos = np.hstack([ypos_all[km.labels_==kind] for kind in kinds[ii]])
+    xpos.append(txpos)
+    ypos.append(typos)
+
+plt.close("all")
+for ii in range(len(kinds)):
+    plt.scatter(xpos[ii],ypos[ii],10,clrs[ii],"s",lw=0)
+plt.imshow(img_L,"bone",clim=[0,3],aspect=0.45)
 
 
 #######################
