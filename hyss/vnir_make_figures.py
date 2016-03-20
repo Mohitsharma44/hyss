@@ -607,7 +607,8 @@ def plot_img(data, rgb=False, aspect=0.45, cmap="bone", clim=None, title="",
 #    7 (number 6)
 
 # -- load the K-Means clusters
-km = pkl.load(open("../output/km_cluster.pkl"))
+km    = pkl.load(open("../output/km_cluster.pkl"))
+waves = np.load('../output/vnir_waves.npy')
 
 # -- load the integrated image
 img_L = np.load("../output/img_L_arr.npy")
@@ -635,10 +636,66 @@ for ii in range(len(kinds)):
     xpos.append(txpos)
     ypos.append(typos)
 
+# -- plot utilities
+stamp   = img_L[600:850,:250]
+xs      = 1.0*6.5
+asp     = 0.45
+xoff    = 0.05
+wid_top = 1.0 - 2.0*xoff
+wid_bot = (wid_top - 0.5*xoff)*0.5
+rat_top = 1600./1560.
+rat_bot = 250./250.
+ys      = 2.5*xoff*xs + wid_top*rat_top*asp*xs + wid_bot*rat_bot*asp*xs
+hgt_top = wid_top*rat_top*asp*xs/ys
+ysep    = 0.5*xoff*xs/ys
+yoff    = xoff*xs/ys
+hgt_bot = wid_bot*rat_bot*asp*xs/ys
+
+# -- initialize the plot
 plt.close("all")
+fig     = plt.figure(figsize=(xs,ys))
+ax_top  = fig.add_axes((xoff,yoff+0.5*yoff+hgt_bot,wid_top,hgt_top))
+ax_botl = fig.add_axes((xoff,yoff,wid_bot,hgt_bot))
+ax_botr = fig.add_axes((0.5+0.25*xoff,yoff,wid_bot,hgt_bot))
+
+# -- add the lighting tags
 for ii in range(len(kinds)):
-    plt.scatter(xpos[ii],ypos[ii],10,clrs[ii],"s",lw=0)
-plt.imshow(img_L,"bone",clim=[0,3],aspect=0.45)
+    ax_top.scatter(xpos[ii],ypos[ii],2,clrs[ii],"s",lw=0)
+    ax_botr.scatter(xpos[ii],ypos[ii],5,clrs[ii],"s",lw=0)
+im_top = ax_top.imshow(img_L,"bone",clim=[0,3],aspect=0.45)
+im_bot = ax_botr.imshow(img_L,"bone",clim=[0,3],aspect=0.45)
+ax_top.axis("off")
+ax_botr.axis("off")
+ax_botr.set_xlim(0,250)
+ax_botr.set_ylim(850,600)
+
+# -- label the top and bottom images
+yr = ax_top.get_ylim()
+xr = ax_top.get_xlim()
+ax_top.text(xr[0],yr[1]-0.03*(yr[0]-yr[1]),
+            "New York City Lighting Technologies", ha="left", va="center", 
+            fontsize=txtsz)
+ax_botr.text(250, 850+0.08*(850-600), "Manhattan Bridge Region", 
+             ha="right", va="center", fontsize=txtsz)
+
+# -- plot the spectra
+ax_botl.set_ylim(-1,8)
+ax_botl.set_xlim(0,6*(waves[-1]-waves[0]))
+for ii in range(6):
+    twaves = waves-waves[0]+ii*(waves[-1]-waves[0])
+    tkmc   = km.cluster_centers_[kinds[ii][0]]
+    ax_botl.plot(twaves, tkmc-tkmc.min(), color=clrs[ii],lw=0.5)
+    ax_botl.text(0.5*(twaves.max()+twaves.min()),7.9,types[ii],fontsize=5,
+                 ha="center",va="top")
+
+ax_botl.set_xticks([ii*(waves[-1]-waves[0]) for ii in range(6)])
+ax_botl.set_xticklabels("")
+ax_botl.set_yticklabels("")
+ax_botl.xaxis.grid(1)
+ax_botl.set_ylabel("intensity [arb units]")
+ax_botl.set_xlabel("wavelength [range: 0.4-1.0 micron]")
+fig.canvas.draw()
+fig.savefig('../output/spectral_class_map.eps', clobber=True)
 
 
 #######################
