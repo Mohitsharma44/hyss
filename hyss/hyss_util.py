@@ -35,7 +35,6 @@ def read_header(hdrfile):
     return {"nrow":samples, "ncol":lines, "nwav":bands, "waves":waves}
 
 
-
 def read_raw(rawfile, shape, dtype=np.uint16):
     """
     Read a Middleton raw file.
@@ -44,16 +43,12 @@ def read_raw(rawfile, shape, dtype=np.uint16):
     # -- alert
     print("reading {0}...".format(rawfile))
 
-#    return np.fromfile(open(rawfile),dtype) \
-#        .reshape(shape[2],shape[0],shape[1])[:,:,::-1] \
-#        .transpose(1,2,0) \
-#        .astype(float)
     return np.fromfile(open(rawfile),dtype) \
         .reshape(shape[2],shape[0],shape[1])[:,:,::-1] \
         .transpose(1,2,0)
 
 
-def read_hyper(fpath,fname=None,full=True):
+def read_hyper(fpath, fname=None, full=True):
     """
     Read a full hyperspectral scan.
     """
@@ -81,3 +76,22 @@ def read_hyper(fpath,fname=None,full=True):
             self.ncol    = sh[2]
 
     return output(fpath)
+
+
+def read_clean(fpath, fname=None, shape=None):
+    """
+    Read a cleaned hyperspectral scan.
+    """
+
+    # -- set up the file names
+    if fname is not None:
+        fpath = os.path.join(fpath,fname)
+
+    # -- alert
+    print("reading {0}...".format(fpath))
+
+    # -- read and return
+    if shape is None:
+        return np.fromfile(fpath,dtype=float)
+    else:
+        return np.fromfile(fpath,dtype=float).reshape(shape)
