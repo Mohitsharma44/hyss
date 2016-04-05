@@ -115,7 +115,7 @@ dpath   = os.path.join(os.path.expanduser("~"),
 fname   = "full frame 20ms dark_VNIR.raw"
 dark    = hu.read_hyper(os.path.join(dpath,fname))
 dk_spec = dark.data[:,:100,:].mean(-1).mean(-1)
-dark.waves *= 1e-3 # [micron]
+dark.waves *= 1e-3 # [microns]
 
 # -- make the plot
 fig, ax = plt.subplots(2,1,sharex=True,figsize=[3.25,3.25])
@@ -131,7 +131,7 @@ ax[0].set_ylabel("intensity [arb units]")
 lin_rat, = ax[1].plot(dark.waves,ul_spec/dk_spec,color="dodgerblue",lw=1.5)
 ax[1].grid(1)
 ax[1].legend((lin_rat,),("(raw data)/(dark)",),loc="lower right",frameon=False)
-ax[1].set_xlabel("wavelength [$\mu$m]")
+ax[1].set_xlabel("wavelength [microns]")
 
 # -- write to file
 fig.savefig("../output/dark_spectrum.eps", clobber=True)
@@ -193,7 +193,7 @@ lins    = ax.plot(cube.waves*1e-3,specs+offs)
 [lin.set_color(colorConverter.to_rgb(clr)) for lin,clr in zip(lins,clrs)]
 ax.legend(lins,labs,loc="lower right",frameon=False,fontsize=8)
 ax.set_ylabel("intensity \n [arb units & offset]")
-ax.set_xlabel("wavelength [micron]")
+ax.set_xlabel("wavelength [microns]")
 ax.set_xlim(cube.waves[0]*1e-3,cube.waves[-1]*1e-3)
 
 # -- set the title
@@ -246,7 +246,7 @@ ax.set_yticklabels([(i+': '+j).replace("_"," ") for [i,j] in
 ax.tick_params("y", length=0)
 ax.text(xr[1],yr[1]-0.02*(yr[0]-yr[1]),"NOAA observed lab sepctra",
         ha="right",fontsize=txtsz)
-ax.set_xlabel("wavelength [micron]",fontsize=txtsz)
+ax.set_xlabel("wavelength [microns]",fontsize=txtsz)
 
 # -- separate spectra with a grid and adjust to fit in the window
 fig.subplots_adjust(0.275,0.05,0.98,0.95)
@@ -344,7 +344,7 @@ ax.set_yticklabels([(i+': '+j).replace("_"," ") for [i,j] in noaa.row_names],
 ax.tick_params("y", length=0)
 ax.text(xr[1],yr[1]-0.02*(yr[0]-yr[1]),"NOAA observed lab sepctra",
         ha="right",fontsize=txtsz)
-ax.set_xlabel("wavelength [micron]",fontsize=txtsz)
+ax.set_xlabel("wavelength [microns]",fontsize=txtsz)
 
 # -- separate spectra with a grid and adjust to fit in the window
 fig.subplots_adjust(0.3,0.225,0.975,0.90)
@@ -445,7 +445,7 @@ ax[2,2].set_xlim(xr)
 ax[2,2].set_ylim(yr)
 ax[2,2].text(xr[1],yr[1]+0.02*(yr[1]-yr[0]),"Unknown",size=txtsz,ha='right')
 ax[1,0].set_ylabel("intensity [arb units]",fontsize=txtsz)
-ax[2,1].set_xlabel("wavelength [micron]",fontsize=txtsz)
+ax[2,1].set_xlabel("wavelength [microns]",fontsize=txtsz)
 leg = ax[0,2].legend(["VNIR","NOAA"],fontsize=8)
 leg.get_frame().set_edgecolor("w")
 fig.canvas.draw()
@@ -536,7 +536,7 @@ for ii, ex in enumerate(km.cluster_centers_):
     tax.text(tax.get_xlim()[1],tax.get_ylim()[1],"cluster {0}".format(ii+1),
              ha='right',va='bottom',fontsize=txtsz)
 
-fig.text(0.5,0.03,'wavelength [$\mu$m]',ha='center',fontsize=txtsz)
+fig.text(0.5,0.03,'wavelength [microns]',ha='center',fontsize=txtsz)
 fig.text(0.025,0.5,'intensity [arb units and offset]',va='center',
          rotation=90,fontsize=txtsz)
 fig.canvas.draw()
@@ -587,7 +587,7 @@ for ii,(tno,tkm,tname) in enumerate(zip(nos,kms,noaa.row_names[nind])):
     ax[ii].legend([link,linn], 
                   ["cluster {0}".format(cind[ii]),tname[0].replace("_"," ")],
                   frameon=False)
-ax[2].set_xlabel("wavelength [micron]")
+ax[2].set_xlabel("wavelength [microns]")
 fig.text(0.05,0.5,"intensity [arbitrary units and offset]",fontsize=txtsz,
          rotation=90,ha="center",va="center")
 fig.canvas.draw()
@@ -617,8 +617,8 @@ ind  = (gf(1.0*ind,1)>0.25)*ind
 
 # -- set the colors, types, and KM indices
 clrs  = ['#E24A33','#8EBA42','#348ABD','#988ED5','#FBC15E','#FFB5B8']
-types = ['High\nPressure\nSodium','LED','Fluorescent','Fluorescent',
-         'Metal\nHalide','LED','LED']
+types = ['High\nPressure\nSodium','LED','Fluorescent','Metal\nHalide','LED',
+         'LED']
 kinds = [np.array([10,1,8,14]), np.array([2]), np.array([3,12]),
          np.array([5,4]), np.array([0]), np.array([7])]
 
@@ -660,8 +660,9 @@ ax_botr = fig.add_axes((0.5+0.25*xoff,yoff,wid_bot,hgt_bot))
 
 # -- add the lighting tags
 for ii in range(len(kinds)):
-    ax_top.scatter(xpos[ii],ypos[ii],2,clrs[ii],"s",lw=0)
-    ax_botr.scatter(xpos[ii],ypos[ii],5,clrs[ii],"s",lw=0)
+    ax_top.scatter(xpos[ii],ypos[ii],1,clrs[ii],"s",lw=0)
+    ax_botr.scatter(xpos[ii],ypos[ii],4,clrs[ii],"s",lw=0)
+
 im_top = ax_top.imshow(img_L,"bone",clim=[0,3],aspect=0.45)
 im_bot = ax_botr.imshow(img_L,"bone",clim=[0,3],aspect=0.45)
 ax_top.axis("off")
@@ -693,7 +694,7 @@ ax_botl.set_xticklabels("")
 ax_botl.set_yticklabels("")
 ax_botl.xaxis.grid(1)
 ax_botl.set_ylabel("intensity [arb units]")
-ax_botl.set_xlabel("wavelength [range: 0.4-1.0 micron]")
+ax_botl.set_xlabel("wavelength [range: 0.4-1.0 microns]")
 fig.canvas.draw()
 fig.savefig('../output/spectral_class_map.eps', clobber=True)
 
@@ -734,6 +735,6 @@ for itap, tap in enumerate(taps):
     ax[irow,icol].tick_params(labelsize=8,)
 fig.text(0.03,0.5,"intensity [arb units]",fontsize=txtsz,rotation=90,
          va="center")
-fig.text(0.5,0.02,"wavelength [micron]",fontsize=txtsz,ha="center")
+fig.text(0.5,0.02,"wavelength [microns]",fontsize=txtsz,ha="center")
 fig.canvas.draw()
 fig.savefig("../output/unique_tap_clusters.eps",clobber=True)
