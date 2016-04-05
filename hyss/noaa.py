@@ -68,7 +68,7 @@ class HyperNoaa(object):
                 self.wavelength = tdata['Wavelength (nm)'].as_matrix()
                 self._nwav      = len(self.wavelength)
 
-            tname = '_'.join(tfile.split('_')[:-2])
+            tname = '_'.join(tfile.split('_')[:-2]).replace("Quart","Quartz")
             self.data[tname] = {}
             for key in tdata.keys():
                 if 'Wavelength' in key:
