@@ -738,3 +738,5 @@ fig.text(0.03,0.5,"intensity [arb units]",fontsize=txtsz,rotation=90,
 fig.text(0.5,0.02,"wavelength [microns]",fontsize=txtsz,ha="center")
 fig.canvas.draw()
 fig.savefig("../output/unique_tap_clusters.eps",clobber=True)
+
+print("finished...")
