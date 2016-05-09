@@ -708,6 +708,16 @@ print("reading tap clusters...")
 waves = np.load("../output/vnir_waves.npy")*1e-3
 taps  = np.load("../output/tap_cl_fil.npy")
 
+# -- tag spectra
+print("loading and tagging spectra...")
+specs = np.load("../output/specs_nrow1600.npy")
+norm  = (specs - specs.mean(1,keepdims=True))/specs.std(1,keepdims=True)
+tags  = (np.dot(norm,taps.T)/float(norm.shape[1])).argmax(1)
+ntags = np.zeros(taps.shape[0],dtype=int)
+
+for ii in range(taps.shape[0]):
+    ntags[ii] =(tags==ii).sum()
+
 # -- normalize taps
 print("normalizing tap clusters...")
 taps -= taps.min(1,keepdims=True)
@@ -728,11 +738,15 @@ for itap, tap in enumerate(taps):
     ax[irow,icol].grid(1)
     ax[irow,icol].set_xlim(waves[0],waves[-1])
     ax[irow,icol].set_ylim(-0.1,1)
+    ttxt = "N = {0:4}" if itap==0 else "{0:4}"
+    ax[irow,icol].text(waves[-1],1.03,ttxt.format(ntags[itap]),fontsize=8,
+                       ha="right")
     ax[irow,icol].set_frame_on(False)
     ax[irow,icol].set_yticklabels("")
     ax[irow,icol].set_xticks([0.4,0.6,0.8,1.0])
     ax[irow,icol].set_xticklabels([0.4,0.6,0.8,1.0],rotation=45,ha="right")
     ax[irow,icol].tick_params(labelsize=8,)
+
 fig.text(0.03,0.5,"intensity [arb units]",fontsize=txtsz,rotation=90,
          va="center")
 fig.text(0.5,0.02,"wavelength [microns]",fontsize=txtsz,ha="center")
