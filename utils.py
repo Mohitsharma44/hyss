@@ -113,7 +113,8 @@ def all_bins():
 
     plt.show()
 
-def show_corr_plot(bins='all', corr_min=0, corr_max=1, spectra_type=3, sort=1):
+def show_corr_plot(bins='all', corr_min=0, corr_max=1,
+                   spectra_type=3, sort=1, cmap="RdBu_r"):
     """
     Visualize correlation coeffecients between
     `corr_min` and corr_max` for `bins`
@@ -129,6 +130,8 @@ def show_corr_plot(bins='all', corr_min=0, corr_max=1, spectra_type=3, sort=1):
         spectra type from `hyss.noaa.row_names`
     sort: int
         sort the correlation coeffs by `particular bin` factor
+    cmap: str
+        matplotlib cmap string
     """
     global noaa, specs, wavs, arr
     def _forceAspect(ax,aspect=1):
@@ -154,7 +157,7 @@ def show_corr_plot(bins='all', corr_min=0, corr_max=1, spectra_type=3, sort=1):
     fcorrs = fcorrs[fcorrs[:, sort].argsort()]
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    im = ax.imshow(fcorrs, "RdBu_r", clim=(corr_min, corr_max), aspect=1)
+    im = ax.imshow(fcorrs, cmap=cmap, clim=(corr_min, corr_max), aspect=1)
     _forceAspect(ax,aspect=1)
     ax.xaxis.set_ticklabels([0]+facs)
     ax.xaxis.set_label_text('Bins')
