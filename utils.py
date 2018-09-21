@@ -162,6 +162,7 @@ def show_corr_plot(bins='all', corr_min=0, corr_max=1,
     ax.xaxis.set_ticklabels([0]+facs)
     ax.xaxis.set_label_text('Bins')
     ax.yaxis.set_label_text('Sources')
+    ax.title.set_text(' '.join(noaa.row_names[spectra_type]))
     fig.colorbar(im, orientation="horizontal")
     mplcursors.cursor(hover=True)
     plt.show()
