@@ -114,7 +114,8 @@ def all_bins():
     plt.show()
 
 def show_corr_plot(bins='all', corr_min=0, corr_max=1,
-                   spectra_type=3, sort=1, cmap="RdBu_r"):
+                   spectra_type=3, all_sources=False,
+                   sort=None, cmap="RdBu_r"):
     """
     Visualize correlation coeffecients between
     `corr_min` and corr_max` for `bins`
@@ -128,6 +129,9 @@ def show_corr_plot(bins='all', corr_min=0, corr_max=1,
         maximum correlation
     spectra_type: int
         spectra type from `hyss.noaa.row_names`
+    all_sources: bool
+        if True, it will show correlations for all
+        the sources
     sort: int
         sort the correlation coeffs by `particular bin` factor
     cmap: str
@@ -143,18 +147,23 @@ def show_corr_plot(bins='all', corr_min=0, corr_max=1,
         facs = [1,2,4,8,16,32]
     else:
         facs = bins
-    sort = facs.index(sort)
+    if sort:
+        sortby = facs.index(sort)
     if arr.size == 0:
         arr = get_cc(specs_file="/scratch/gdobler/for_mohit/specs_nrow1600.npy",
                      wavs_file="/scratch/gdobler/for_mohit/vnir_waves.npy",
                      noaa_dir="/scratch/gdobler/for_mohit/noaa/",
                      facs=facs)
+    if all_sources:
+        corrs = arr[..., spectra_type].T
+    else:
+        all_spec_ind = arr[0].argmax(1) == spectra_type
+        corrs = arr[..., spectra_type][:, all_spec_ind].T
 
-    all_spec_ind = arr[0].argmax(1) == spectra_type
-    corrs = arr[..., spectra_type][:, all_spec_ind].T
     ind = np.logical_and(corrs[:, 0] > corr_min, corrs[:, 0] < corr_max)
     fcorrs = corrs[ind]
-    fcorrs = fcorrs[fcorrs[:, sort].argsort()]
+    if sort:
+        fcorrs = fcorrs[fcorrs[:, sortby].argsort()]
     fig = plt.figure()
     ax = fig.add_subplot(111)
     im = ax.imshow(fcorrs, cmap=cmap, clim=(corr_min, corr_max), aspect=1)
